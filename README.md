@@ -95,14 +95,12 @@ Module for importing models into the game
 ```
 *Same as* `ImportObjects` *but only uses a Model*
 
-### Huh
-Basically: 
-- Get a cloud with `module:GetCloud()`
-- Use the cloud to set properties of anything under your character
 
 ## Give me an example
 
-Simple kill
+### Simple kill
+
+#### Async Version
 ```lua
 -- Load in the library
 local Library = loadstring(game:HttpGetAsync"https://raw.githubusercontent.com/7n7o/BAGHLibrary/master/main.lua")()
@@ -123,6 +121,27 @@ Library:GetCloud():andThen(function(Cloud)
         end)
     end)
 end)
+```
+
+#### Synchronous Version
+```lua
+-- Load in the library
+local Library = loadstring(game:HttpGetAsync"https://raw.githubusercontent.com/7n7o/BAGHLibrary/master/main.lua")()
+
+local Target = "7n7o"
+
+-- Get a cloud
+local _, Cloud = Library:GetCloud():await()
+
+--Create an effect cloud
+local _, EffectCloudCloud:EffectCloud():await()
+--Set the effect cloud's name to "Head" and parent to target's character which will kill them
+EffectCloud:SetProperties({
+    Parent = game.Players[Target].Character,
+    Name = "Head"
+   }):await()
+-- Destroy the effect cloud
+EffectCloud:Destroy() 
 ```
 
 ## How does it work
