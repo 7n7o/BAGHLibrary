@@ -132,7 +132,7 @@ local Target = "7n7o"
 local _, Cloud = Library:GetCloud():await()
 
 --Create an effect cloud
-local _, EffectCloudCloud:EffectCloud():await()
+local _, EffectCloud = Cloud:EffectCloud():await()
 --Set the effect cloud's name to "Head" and parent to target's character which will kill them
 EffectCloud:SetProperties({
     Parent = game.Players[Target].Character,
