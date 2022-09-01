@@ -7,8 +7,6 @@ uses rbxm-suite
 To load the library you can use
 ```lua
 local Library = loadstring(game:HttpGetAsync"https://raw.githubusercontent.com/7n7o/BAGHLibrary/master/main.lua")()
-local Cloud = Library.Cloud
-local ModelImporter = Library.ModelImporter
 ```
 
 ## Documentation
