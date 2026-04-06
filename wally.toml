@@ -1,0 +1,9 @@
+[package]
+name = "root/baghlibrary"
+version = "0.1.0"
+registry = "https://github.com/UpliftGames/wally-index"
+realm = "shared"
+
+[dependencies]
+Promise = "evaera/promise@4.0.0"
+Maid = "blestooo/maid@0.1.1"

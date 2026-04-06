@@ -1,5 +1,8 @@
-/BAGHLibrary.rbxm
+# Build artifacts
+build/
+generated/
+Packages/
 
-# Roblox Studio lock files
-/*.rbxlx.lock
-/*.rbxl.lock
+# Wally
+./wally
+./wally.lock

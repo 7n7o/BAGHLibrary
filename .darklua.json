@@ -1,0 +1,19 @@
+{
+  generator: { name: "readable", column_span: 50 },
+
+  rules: [
+    {
+      rule: "convert_require",
+      current: {
+        name: "path",
+        sources: {
+          "@pkg": "Packages"
+        },
+        module_folder_name: "init"
+      },
+      target: {
+        name: "roblox",
+      }
+    },
+  ]
+}

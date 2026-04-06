@@ -1,6 +1,12 @@
 {
   "name": "BAGHLibrary",
   "tree": {
-    "$path": "src"
+    "$className": "Folder",
+    "Packages": {
+      "$path": "Packages"
+    },
+    "BAGHLibrary": {
+      "$path": "generated"
+    }
   }
 }

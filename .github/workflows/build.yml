@@ -1,0 +1,60 @@
+name: Publish Build
+on: push
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Install Rojo
+        run: |
+          url=$(curl -s https://api.github.com/repos/rojo-rbx/rojo/releases/latest \
+            | grep browser_download_url \
+            | grep linux-x86_64 \
+            | cut -d '"' -f 4)
+
+          curl -L "$url" -o rojo.zip
+          unzip rojo.zip
+          chmod +x rojo
+          sudo mv rojo /usr/local/bin/
+
+      - name: Install Darklua
+        run: |
+          url=$(curl -s https://api.github.com/repos/seaofvoices/darklua/releases/latest \
+            | grep browser_download_url \
+            | grep linux-x86_64 \
+            | cut -d '"' -f 4)
+
+          curl -L "$url" -o darklua.zip
+          unzip darklua.zip
+          chmod +x darklua
+          sudo mv darklua /usr/local/bin/
+
+      - name: Install Wally
+        run: |
+          url=$(curl -s https://api.github.com/repos/UpliftGames/wally/releases/latest \
+            | grep browser_download_url \
+            | grep linux \
+            | cut -d '"' -f 4)
+
+          curl -L "$url" -o wally.zip
+          unzip wally.zip
+          chmod +x wally
+          sudo mv wally /usr/local/bin/
+
+      - name: Run build script
+        run: |
+          chmod +x build.sh
+          ./build.sh
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: out
+          path: build/out.bin

@@ -1,52 +1,40 @@
 
-local Promise = require(script.Parent.Promise)
-local BAGH = require(script.Parent)
-local PropertyDict = require(script.Parent.Properties)
+local Promise = require("@pkg/Promise")
+local BAGH = require("./BAGH")
+local PropertyDict = require("./Properties")
 
 local Players = game:FindService("Players")
 local LocalPlayer = Players.LocalPlayer
 
 local ModelImporter = {}
 
-function ModelImporter:Import(filepath, parent, cloud)
-    self._cloud = cloud
-    return Promise.new(function(res, rej)
-        if not isfile(filepath) then
-            rej("File not found")
-            return
-        end
-        local ID = getcustomasset(filepath)
-        if not ID then
-            rej("Could not import model")
-            return
-        end
-        local Objects = game:GetObjects(ID)
-        if not Objects then
-            rej("Could not import model")
-            return
-        end
-
-        ModelImporter:ImportObjects(Objects, cloud, parent):andThen(function() res(parent) end):catch(rej)
-    end)
+function buildPropertyDictionary(i1, i2)
+	local pDict = PropertyDict[i1.ClassName]
+	if pDict == nil then
+		warn(i1.ClassName.." is not supported")
+		return false
+	end
+	
+	local Properties = {}
+	for _, Property in ipairs(pDict) do
+		if i1[Property] ~= i2[Property] then
+			Properties[Property] = i2[Property]
+		end
+	end
+	
+	return Properties
+	
 end
 
-function ModelImporter:ImportObjects(Objects, Cloud, Parent)
-    print(Parent)
-    return Promise.new(function(res, rej)
-        local Promises = {}
-        local Out = {}
-        for _, Object in pairs(Objects) do
-            local Promise = self:ImportModel(Object, Cloud, Parent):andThen(function(Model)
-                table.insert(Out, Model)
-            end):catch(rej)
-            table.insert(Promises, Promise)
-        end
-        Promise.all(Promises):andThen(function() res(Out) end)
-    end)
-end
 
-function ModelImporter:ImportModel(Model, Cloud, Parent)
-    print(Parent)
+function ModelImporter:ImportModel(Provider, Model, Cloud, Parent, options)
+	local Character = LocalPlayer.Character
+	options = options or {}
+	
+	local useDefer = options.useDefer or false
+	local batchSize = options.batchSize or 100
+	local batchSleep = options.batchSleep or 0
+	
     return Promise.new(function(res, rej)
         if not Model then
             rej("Could not import model")
@@ -57,53 +45,114 @@ function ModelImporter:ImportModel(Model, Cloud, Parent)
             if part:IsA("Part") then
                 numParts = numParts + 1
             end
-        end
-        local Promises = {}
-        local numTools = #LocalPlayer.Backpack:GetChildren()
-        for i = 1, numParts do
-            BAGH:GetTool("BeatUpBoombox")
-        end
-        repeat task.wait(1/0) until
-        #LocalPlayer.Backpack:GetChildren() - numTools == numParts
+		end
+		
 
-        local count = 0
-        local Tools = {}
-        for _, Tool in pairs(LocalPlayer.Backpack:GetChildren()) do
-            if count == numParts then break end
-            if Tool.Name == "BeatUpBoombox" then
-                count = count + 1
-                table.insert(Tools, Tool)
-                Tool.Parent = LocalPlayer.Character
-            end
-        end
 
         
-        
-      
-        while task.wait(1/0) do
-            local a = true
-            for _, Tool in pairs(Tools) do
-                if Tool.Parent ~= Character then a = false end 
-            end
-            if a then break end
-        end
-        for _, Tool in pairs(Tools) do
-            Tool.Handle:BreakJoints()
-        end
-        task.wait(.1)
-        local count = 0
-        local PartPromises = {}
-        for _, part in pairs(Model:GetDescendants()) do
-            if part:IsA("Part") then
-                count = count + 1
-                Tools[count].Name = count
-                
-                self:CreatePart(Tools[count], part, Parent)
-            end
-        end
-        Promise.all(PartPromises):andThen(function()
-            res(Parent)
-        end)
+		local _, parts = Provider:RequestInstances("Part", numParts):await()
+		local m = Model:Clone()
+		Model:Destroy()
+		Model = m
+		
+		
+		local count = 0
+		local Assigns = {}
+		for _, part in pairs(Model:GetDescendants()) do
+			if part:IsA("Part") then
+				count = count + 1
+				
+
+
+				local Properties = buildPropertyDictionary(parts[count], part)
+				if Properties == false then
+					count -= 1
+					continue
+				end
+
+				local hasAfter = false
+				for _, v in ipairs(part:GetChildren()) do
+					if Provider:GetHeap(v.ClassName) then
+						hasAfter = true
+						break
+					end
+				end
+				
+				local peePee = parts[count]
+				
+				local After = function()
+					local ps = {}
+					for _, v in ipairs(part:GetChildren()) do
+						if Provider:GetHeap(v.ClassName) then
+							
+							local _, ins = Provider:RequestInstance(v.ClassName):await()
+							local Properties = buildPropertyDictionary(ins, v)
+							
+							if Properties == false then
+								continue
+							end
+							
+							Properties.Parent = nil
+							local p = Cloud:SetProperties(ins, Properties):andThen(function()
+								Cloud:SetProperties(ins, {
+									Parent = peePee
+								})
+							end)
+							table.insert(ps, p)
+						end
+					end
+					return Promise.all(ps)
+				end
+			
+				Properties.Parent = Parent
+				table.insert(Assigns, {part, parts[count], Properties, hasAfter and After or nil})
+				
+			end
+		end
+		
+		print(count)
+		
+		local centre = Model:GetBoundingBox()
+		
+		-- sort assigns by distance to model pivot and size of part
+		table.sort(Assigns, function(a, b)
+			local A, B = a[1], b[1]
+			
+			local distA = (A.Position - centre.p).Magnitude
+			local distB = (B.Position - centre.p).Magnitude
+			
+			local sizeA = A.Size.X * A.Size.Y * A.Size.Z
+			local sizeB = B.Size.X * B.Size.Y * B.Size.Z
+			
+			return (distA - sizeA) > (distB - sizeB)
+		end)
+		
+		local spawner = useDefer and task.defer or task.spawn
+		
+		local ctr = 0
+		
+		
+		local Promises = {}
+		repeat
+			
+			local _, p, prop, after = unpack(table.remove(Assigns))
+			local r = Cloud:SetProperties(p, prop):andThen(function()
+				if after ~= nil and typeof(after) == "function" then
+					after():await()
+				end
+			end)
+			table.insert(Promises, r)
+			ctr = ctr + 1
+			if useDefer and ctr % batchSize == 0 then
+				Promise.all(Promises):await()
+				Promises = {}
+				task.wait(batchSleep)
+			end
+		until #Assigns == 0 
+        repeat task.wait() until #Promises == ctr
+		Promise.all(Promises):andThen(function()
+			res(Parent)
+		end, rej)
     end)
 end
 
@@ -125,34 +174,25 @@ function ModelImporter:CloneProperties(Instance1, Instance2)
     end)
 end
 
-function ModelImporter:CreatePart(Boombox, Part, Parent, Flag)
-    return Promise.new(function(res, rej)
+function ModelImporter:CreateParts(Cloud, Num)
+	
+end
+
+function ModelImporter:CreatePart(P1, Part, Parent, Flag)
+	return Promise.new(function(res, rej)
+		if (PropertyDict[Part.ClassName] == nil) then
+			rej(warn("Class not supported", Part.ClassName))
+		end
+		
         local Properties = {}
         for _, Property in ipairs(PropertyDict[Part.ClassName]) do
             Properties[Property] = Part[Property]
         end
         Properties.Parent = Parent
-        if not Part:FindFirstChildOfClass("SpecialMesh") then
-            Boombox.Handle:ClearAllChildren()
-        else
-            for _,v in ipairs(Boombox.Handle:GetChildren()) do
-                if not v:IsA("SpecialMesh") then
-                    v:Destroy()
-                end
-            end
-        end
-        
-        if not Flag then Boombox.Handle:BreakJoints() end
-        task.wait(.1)
-        self._cloud:SetProperties(Boombox.Handle, Properties):andThen(function(H)
-            task.wait(.1)
-            Boombox:Destroy()
-            if Part:FindFirstChildOfClass("SpecialMesh") then
-                self:CloneProperties(Part:FindFirstChildOfClass("SpecialMesh"), H:FindFirstChildOfClass("SpecialMesh")):andThen(res)
-            else
-                res(H)
-            end
-        end)
+
+
+
+        self._cloud:SetProperties(P1, Properties)
     end)
 end
 
