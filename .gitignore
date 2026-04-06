@@ -4,5 +4,5 @@ generated/
 Packages/
 
 # Wally
-./wally
+wally
 ./wally.lock
