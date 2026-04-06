@@ -66,7 +66,6 @@ function Cloud:Init()
 	
 	self._maid:GiveTask(function()
 		Tool.Parent = Character
-		--workspace.GuiEvent:FireServer("")
 		if Tool.Parent ~= nil then
 			self:SetProperties(Tool, {Parent = game.TestService})
 		end
@@ -133,85 +132,6 @@ function Cloud:EffectCloud()
         local EffectCloud = self._tool:WaitForChild("EffectCloud")
 		
 		task.defer(res, EffectCloud, function() self._control:InvokeServer("Fly", {Flying = false}) end)
-    end)
-end
-
-function Cloud:GetTool(Name)
-    local Character = LocalPlayer.Character
-    local Backpack = LocalPlayer.Backpack
-    return Promise.new(function(res, rej)
-        workspace.Buy:FireServer(0, Name)
-        local c
-        c = Backpack.ChildAdded:Connect(function(child)
-            if child.Name == Name then
-                c:Disconnect()
-                task.defer(function()
-                    res(child)
-                end)
-            end
-        end)
-    end)
-end
-
-function Cloud:GetHead()
-    local Character = LocalPlayer.Character
-    local Backpack = LocalPlayer.Backpack
-    return Promise.new(function(res, rej)
-        workspace.GuiEvent:FireServer("Hvmebrew")
-        local Model = Character:FindFirstChild("Hvmebrew") or Character:WaitForChild("Hvmebrew")
-        if Model then res(Model) else rej() end 
-    end)
-end
-
-function Cloud:CreatePart(parent, properties)
-	local Character = LocalPlayer.Character
-	local Backpack = LocalPlayer.Backpack
-
-
-
-	local Humanoid = Character:FindFirstChildOfClass("Humanoid")
-
-    return Promise.new(function(res, rej)
-        self:GetTool("BeatUpBoombox"):andThen(function(Tool)
-            Tool.Parent = Character
-            Tool.Handle:FindFirstChildOfClass("SpecialMesh"):Destroy()
-            Tool.Handle:BreakJoints()
-            self:SetProperties(Tool.Handle, properties):andThen(function(P)
-                self:SetProperties(P, {
-                    Parent = parent
-                }):andThen(function()
-                    res(P)
-                end):catch(rej)
-            end):catch(rej)
-        end):catch(rej)
-    end)
-end
-
-function Cloud:Weld(p0, p1, c0, c1)
-	local Character = LocalPlayer.Character
-	local Backpack = LocalPlayer.Backpack
-
-
-
-	local Humanoid = Character:FindFirstChildOfClass("Humanoid")
-
-    c0 = c0 or CFrame.new()
-    c1 = c1 or CFrame.new()
-    
-    return Promise.new(function(res, rej)
-        self:GetHead():andThen(function(Model)
-            Cloud:SetProperties(Model.Head.Weld, {
-                Part0 = Character.Torso,
-                Part1 = Character["Left Arm"],
-                C0 = CFrame.new(),
-                C1 = CFrame.new(),
-                Name = "Weld",
-                Parent = Character
-            }):andThen(function()
-                Model:Destroy()
-                self:SetProperties(Character.Head, {Transparency = 0})
-            end)
-        end):catch(rej)
     end)
 end
 

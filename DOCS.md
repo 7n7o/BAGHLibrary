@@ -18,34 +18,14 @@ Clouds are objects that allow you to change the properties of anything that is a
 *Changes the properties of *`Instance`* to the ones described in *`PropertyTable`*, promise is resolved after all properties have been changed.*
 
 ```lua
-<Promise<EffectCloud>> Cloud:EffectCloud()
+<Promise<Instance, Function>> Cloud:EffectCloud()
 ```
-*Returns an *`EffectCloud`* class*
+*Returns the EffectCloud instance, as well as a function to destroy the effect cloud*
 
 ```lua
 <Promise<Part>> Cloud:CreatePart(Parent, PropertyTable)
 ```
 *Creates a Part with the properties described in *`PropertyTable`*, promise is resolved after all properties have been changed.*
-
-#### EffectCloud
-
-Effect clouds are temporary instances that must always be destroyed
-
-```lua
-<EffectCloud> EffectCloud.new(Cloud)
-```
-*Use* `Cloud:EffectCloud()`
-
-
-```lua
-<Promise<EffectCloud>> EffectCloud:SetProperties(PropertyTable)
-```
-*Same as calling* `Cloud:SetProperties(EffectCloudInstance, PropertyTable)`
-
-```lua
-<void> EffectCloud:Destroy()
-```
-*Destroys the EffectCloud*
 
 ### Module functions
 ```lua
@@ -66,68 +46,54 @@ Effect clouds are temporary instances that must always be destroyed
 
 ### Model Importer
 
-Module for importing models into the game
+```lua
+<Promise<Model>> ModelImporter:ImportModel(Provider, Model, Cloud, Parent, options)
+```
+*Replicates a client-side model to the server*
+
+### InstanceHeap
+
+*An InstanceHeap is an object that maintains a pool of its base instance, at any time it can be requested for a number of items*
 
 ```lua
-<Promise<Model>> ModelImporter:Import(Filepath, Parent, Cloud)
+<InstanceHeap> InstanceHeap.new(Cloud, BaseInstance, Model, Name)
 ```
-*Imports the rbxm model and returns it*
+*Create an InstanceHeap in the specified Model, with a given BaseInstance*
 
 ```lua
-<Promise<Model>> ModelImporter:ImportObjects(Objects, Parent, Cloud)
+InstanceHeap:SetDesiredAmount(Amount)
 ```
-*Imports the objects gvien as a table of Instances, will copy any parts to the server* 
+*Tell the InstanceHeap how many instances you want available*
 
 ```lua
-<Promise<Model>> ModelImporter:ImportModel(Model, Parent, Cloud)
+<Promise<{Instance}>> InstanceHeap:RequestInstances(Amount, Refill)
 ```
-*Same as* `ImportObjects` *but only uses a Model*
+*Get *`Amount`* Instances, and optionally refill before resolving.
 
-
-## Give me an example
-
-### Simple kill
-
-#### Async Version
 ```lua
--- Load in the library
-local Library = loadstring(game:HttpGetAsync"https://raw.githubusercontent.com/7n7o/BAGHLibrary/master/main.lua")()
-
-local Target = "7n7o"
-
--- Get a cloud
-Library:GetCloud():andThen(function(Cloud)
-    --Create an effect cloud
-    Cloud:EffectCloud():andThen(function(EffectCloud)
-        --Set the effect cloud's name to head and parent to target's character which will kill them
-        EffectCloud:SetProperties({
-          Parent = game.Players[Target].Character,
-          Name = "Head"
-        }):andThen(function()
-            -- Destroy the effect cloud instantly
-            EffectCloud:Destroy() 
-        end)
-    end)
-end)
+InstanceHeap:Destroy()
 ```
+*Destroy the InstanceHeap*
 
-#### Synchronous Version
+### InstanceProvider
+*An InstanceProvider holds multiple InstanceHeaps, and maintains them to provide instances of many type*
+
 ```lua
--- Load in the library
-local Library = loadstring(game:HttpGetAsync"https://raw.githubusercontent.com/7n7o/BAGHLibrary/master/main.lua")()
-
-local Target = "7n7o"
-
--- Get a cloud
-local _, Cloud = Library:GetCloud():await()
-
---Create an effect cloud
-local _, EffectCloud = Cloud:EffectCloud():await()
---Set the effect cloud's name to "Head" and parent to target's character which will kill them
-EffectCloud:SetProperties({
-    Parent = game.Players[Target].Character,
-    Name = "Head"
-   }):await()
--- Destroy the effect cloud
-EffectCloud:Destroy() 
+<InstanceProvider> InstanceProvider.new(Heaps)
 ```
+*Create an instance provider with the given heaps, keyed by name, otherwise automatically named*
+
+```lua
+InstanceProvider:AddHeap(Heap, Name)
+```
+*Add the heap to the provider with the given name*
+
+```lua
+<Promise<{Instance}>> InsInstanceProvider:RequestInstances(Name, Amount)
+```
+*Request Amount Instances from the Heap with the given name*
+
+```lua
+<Promise<Instance>> InstanceProvider:RequestInstance(Name)
+```
+*Request an Instance from the Heap with the given name*

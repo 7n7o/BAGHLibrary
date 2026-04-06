@@ -53,28 +53,11 @@ function BAGH:GetTool(Name)
         c = Backpack.ChildAdded:Connect(function(child)
             if child.Name == Name then
                 c:Disconnect()
-                task.defer(function()
+                task.delay(0.2, function()
                     res(child)
                 end)
             end
         end)
-    end)
-end
-
-function BAGH:CreateModel(Name, Parent)
-    return Promise.new(function(res, rej)
-        BAGH:GetHead():andThen(function(Model)
-            self:GetCloud():SetProperties(Model, {
-                Parent = Parent,
-                Name = Name
-            }):andThen(function(Model)
-                self:GetCloud():SetProperties(Model.Humanoid, {
-                    DisplayName = ""
-                }):andThen(function(H)
-                    res(H.Parent)
-                end):catch(rej)
-            end):catch(rej)
-        end):catch(res)
     end)
 end
 
