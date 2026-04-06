@@ -19,7 +19,7 @@ function BAGH:GetCloud(forceNew, keepActive)
 			res(Cloud.new(Character.Homebrew_Cloud, keepActive))
 			return
         end
-		self:GetTool("PompousTheCloud"):andThen(function(tool) res(Cloud.new(tool, keepActive)) end):catch(rej)
+		self:GetTool("PompousTheCloud"):andThen(function(tool) local c = Cloud.new(tool, keepActive); task.wait(1) res(c) end):catch(rej)
     end)
 end
 

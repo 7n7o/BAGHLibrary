@@ -32,7 +32,7 @@ function InstanceHeap.new(Cloud, BaseInstance, Model, Name)
 	}
 	
 	Cloud:SetProperties(BaseInstance, {Parent = Model})
-	Cloud:SetProperties(Model, {Parent = Cloud._tool.Handle}):await()
+	Cloud:SetProperties(Model, {Name = self.Name, Parent = Cloud._tool.Handle}):await()
 
 	return self
 end
