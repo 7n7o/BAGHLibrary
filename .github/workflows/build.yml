@@ -54,6 +54,11 @@ jobs:
           chmod +x build.sh
           ./build.sh
 
+      - name: Run bundle script
+        run: |
+          chmod +x bundle.sh
+          ./bundle.sh
+
       - name: Release
         uses: softprops/action-gh-release@v2
         with:
@@ -63,3 +68,4 @@ jobs:
           prerelease: true
           files: |
             ./build/BAGHLibrary.rbxm
+            ./build/bundle.lua
