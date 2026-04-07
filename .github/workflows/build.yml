@@ -52,7 +52,11 @@ jobs:
       - name: Install Darklua via Cargo
         run: |
           source $HOME/.cargo/env
-          cargo install --git https://github.com/Stefanuk12/darklua --branch hybrid-mode darklua
+          if ! command -v darklua >/dev/null 2>&1; then
+            cargo install --git https://github.com/Stefanuk12/darklua --branch hybrid-mode darklua
+          else
+            echo "darklua already installed, skipping..."
+          fi
 
       - name: Install Wally
         run: |
