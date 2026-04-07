@@ -12,25 +12,39 @@ jobs:
       - name: Checkout repo
         uses: actions/checkout@v4
 
+      - name: Install Rojo
+        run: |
+          url=$(curl -s https://api.github.com/repos/rojo-rbx/rojo/releases/latest \
+            | grep browser_download_url \
+            | grep linux-x86_64 \
+            | cut -d '"' -f 4)
+
+          curl -L "$url" -o rojo.zip
+          unzip rojo.zip
+          chmod +x rojo
+          sudo mv rojo /usr/local/bin/
+
       - name: Install Rust and Cargo
         run: |
           curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
           source $HOME/.cargo/env
-
-      - name: Install Rojo via Cargo
-        run: |
-          source $HOME/.cargo/env
-          cargo install --git https://github.com/rojo-rbx/rojo rojo
 
       - name: Install Darklua via Cargo
         run: |
           source $HOME/.cargo/env
           cargo install --git https://github.com/Stefanuk12/darklua --branch hybrid-mode darklua
 
-      - name: Install Wally via Cargo
+      - name: Install Wally
         run: |
-          source $HOME/.cargo/env
-          cargo install --git https://github.com/UpliftGames/wally wally
+          url=$(curl -s https://api.github.com/repos/UpliftGames/wally/releases/latest \
+            | grep browser_download_url \
+            | grep linux \
+            | cut -d '"' -f 4)
+
+          curl -L "$url" -o wally.zip
+          unzip wally.zip
+          chmod +x wally
+          sudo mv wally /usr/local/bin/
 
       - name: Run build script
         run: |
