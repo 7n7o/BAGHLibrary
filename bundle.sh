@@ -4,8 +4,8 @@ path="build/bundle"
 filename=$(basename $path)
 
 if [[ "${branch}" == "all" ]]; then
-  "$0" dev &
-  "$0" prod &
+  "$0" dev
+  "$0" prod
   wait
   echo "Complete"
   exit 0

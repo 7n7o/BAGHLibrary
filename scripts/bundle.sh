@@ -4,8 +4,8 @@ path="scripts/lua/$1"
 filename=$(basename $1)
 
 if [[ "${branch}" == "all" ]]; then
-  "$0" $1 dev &
-  "$0" $1 prod &
+  "$0" $1 dev
+  "$0" $1 prod
   wait
   echo "Complete"
   exit 0

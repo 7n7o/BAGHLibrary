@@ -2,13 +2,13 @@
 branch="${1:-all}"
 
 if [[ "${branch}" == "all" ]]; then
-  "$0" dev &
-  "$0" prod &
+  "$0" dev
+  "$0" prod
   wait
   echo "Complete"
   exit 0
 fi
-
+mkdir build
 out_dir="generated/library"
 in_dir="src"
 
