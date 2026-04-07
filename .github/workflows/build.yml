@@ -70,6 +70,11 @@ jobs:
           chmod +x wally
           sudo mv wally /usr/local/bin/
 
+      - name: Install wally dependencies
+        run: |
+          chmod +x wally_install.sh
+          ./wally_install.sh
+
       - name: Run build script
         run: |
           mkdir build
