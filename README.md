@@ -2,17 +2,19 @@
 This is a library to interface with a vulnerable version of the pompous the cloud gear found in some roblox games.
 
 ## Building
-To build the RBXM run build.sh <(dev|prod|all)?>
-To build the bundle run bundle.sh <(dev|prod|all)?>
+To build the RBXM run `build.sh <(dev|prod|all)?>`
+
+To build the bundle run `bundle.sh <(dev|prod|all)?>`
 
 ### Scripts
-To build a script bundle, run scripts/bundle.sh <script name> <(dev|prod|all)?>
+To build a script bundle, run `scripts/bundle.sh <script name> <(dev|prod|all)?>`
+
 Example: `scripts/bundle.sh killall dev`
 
 ## Loading the library
 The recommended way to load the library is via rbxm-suite:
 ```lua
-local rbxmSuite = loadstring(game:HttpGet("https://github.com/richie0866/rbxm-suite/releases/latest/download/rbxm-suite.lua"))()
+local rbxmSuite = loadstring(game:HttpGet("https://github.com/richie0866/rbxm-szuite/releases/latest/download/rbxm-suite.lua"))()
 local path = rbxmSuite.download("7n7o/BAGHLibrary@latest", "BAGHLibrary_prod.rbxm")
 local Model = rbxmSuite.launch(path)
 local Packages, Library = Model.Packages, Model.Library
