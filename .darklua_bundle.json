@@ -1,16 +1,18 @@
 {
-  generator: { name: "readable", column_span: 50 },
+  generator: { name: "retain_lines", column_span: 340827345097 },
 
   bundle: {
     require_mode: {
       name: "path",
       sources: {
-        "@pkg": "Packages"
-      }
-    }
+        "@pkg": "generated/packages"
+      },
+    },
+    modules_identifier: "_TAD_",
   },
 
   rules: [
+    "remove_types",
     {
       rule: "convert_require",
       current: {

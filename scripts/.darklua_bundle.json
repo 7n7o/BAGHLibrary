@@ -1,0 +1,19 @@
+{
+  generator: { name: "retain_lines", column_span: 340827345097 },
+
+  bundle: {
+    require_mode: {
+      name: "path",
+      sources: {
+        "@build": "../build",
+        "@src": "../src",
+        "@pkg": "../generated/packages",
+      }
+    },
+    modules_identifier: "_TAD_",
+  },
+
+  rules: [
+    "remove_types"
+  ]
+}

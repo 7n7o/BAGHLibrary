@@ -1,5 +1,10 @@
-name: Publish Build
-on: push
+name: Build
+on:
+  workflow_call:
+    outputs:
+      artifact-name:
+        description: "Name of the uploaded artifact"
+        value: ${{ jobs.build.outputs.artifact-name }}
 
 permissions:
   contents: write
@@ -7,6 +12,9 @@ permissions:
 jobs:
   build:
     runs-on: ubuntu-latest
+
+    outputs:
+      artifact-name: build-output
 
     steps:
       - name: Checkout repo
@@ -69,13 +77,8 @@ jobs:
           chmod +x bundle.sh
           ./bundle.sh
 
-      - name: Release
-        uses: softprops/action-gh-release@v2
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
         with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          tag_name: snapshot
-          name: Dev Build
-          prerelease: true
-          files: |
-            ./build/BAGHLibrary.rbxm
-            ./build/bundle.lua
+          name: build-output
+          path: build/

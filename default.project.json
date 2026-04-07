@@ -6,7 +6,7 @@
       "$path": "Packages"
     },
     "BAGHLibrary": {
-      "$path": "generated"
+      "$path": "generated/library"
     }
   }
 }

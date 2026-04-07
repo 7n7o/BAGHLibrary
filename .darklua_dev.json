@@ -1,0 +1,10 @@
+{
+  generator: { name: "readable", column_span: 80 },
+
+  rules: [
+    "remove_types",
+    "remove_unused_variable",
+    "group_local_assignment",
+    "remove_spaces"
+  ]
+}

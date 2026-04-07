@@ -3,9 +3,10 @@ local Cloud = require("./Cloud")
 local ModelImporter = require("./ModelImporter")
 local InstanceHeap = require("./InstanceHeap")
 local InstanceProvider = require("./InstanceProvider")
+local Properties = require("./Properties")
+
 local Maid = require("@pkg/Maid")
 local Promise = require("@pkg/Promise")
-local Properties = require("./Properties")
 
 return setmetatable({
         Cloud=Cloud,

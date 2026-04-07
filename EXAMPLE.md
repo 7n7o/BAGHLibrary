@@ -4,19 +4,31 @@
 ### Loading the library
 The recommended way to load the library is via rbxm-suite:
 ```lua
-local rbxmSuite = loadstring(game:HttpGetAsync("https://github.com/richie0866/rbxm-suite/releases/latest/download/rbxm-suite.lua"))()
-local path = rbxmSuite.download("7n7o/BAGHLibrary@snapshot", "BAGHLibrary.rbxm")
-local Library = rbxmSuite.launch(path).BAGHLibrary
+local rbxmSuite = loadstring(game:HttpGet("https://github.com/richie0866/rbxm-suite/releases/latest/download/rbxm-suite.lua"))()
+local path = rbxmSuite.download("7n7o/BAGHLibrary@latest", "BAGHLibrary_prod.rbxm")
+local Model = rbxmSuite.launch(path)
+local Packages, Library = Model.Packages, Model.Library
 
 local require = rbxmSuite.require
-
-local Promise = require(Library.Promise)
 
 local BAGH = require(Library)
 local Cloud = require(Library.Cloud)
 local ModelImporter = require(Library.ModelImporter)
 local InstanceHeap = require(Library.InstanceHeap)
 local InstanceProvider = require(Library.InstanceProvider)
+
+local Promise = require(Packages.Promise)
+```
+
+You may also load it via the bundle:
+```lua
+local BAGH = loadstring(game:HttpGet("https://github.com/7n7o/BAGHLibrary/releases/latest/download/bundle.prod.lua"))()
+local Cloud = BAGH.Cloud
+local ModelImporter = BAGH.ModelImporter
+local InstanceHeap = BAGH.InstanceHeap
+local InstanceProvider = BAGH.InstanceProvider
+
+local Promise = BAGH.Promise
 ```
 
 
