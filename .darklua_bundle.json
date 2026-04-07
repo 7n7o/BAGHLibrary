@@ -1,0 +1,24 @@
+{
+  generator: { name: "readable", column_span: 50 },
+
+  bundle: {
+    require_mode: {
+      name: "path",
+      sources: {
+        "@pkg": "Packages"
+      }
+    }
+  },
+
+  rules: [
+    {
+      rule: "convert_require",
+      current: {
+        name: "roblox"
+      },
+      target: {
+        name: "path",
+      }
+    }
+  ]
+}

@@ -6,14 +6,15 @@
       rule: "convert_require",
       current: {
         name: "path",
+        module_folder_name: "init",
         sources: {
           "@pkg": "Packages"
-        },
-        module_folder_name: "init"
+        }
       },
       target: {
         name: "roblox",
+        indexing_style: "find_first_child"
       }
-    },
+    }
   ]
 }

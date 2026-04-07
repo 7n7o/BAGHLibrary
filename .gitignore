@@ -6,3 +6,6 @@ Packages/
 # Wally
 wally
 ./wally.lock
+
+# Other stuff
+scripts/
