@@ -12,41 +12,25 @@ jobs:
       - name: Checkout repo
         uses: actions/checkout@v4
 
-      - name: Install Rojo
+      - name: Install Rust and Cargo
         run: |
-          url=$(curl -s https://api.github.com/repos/rojo-rbx/rojo/releases/latest \
-            | grep browser_download_url \
-            | grep linux-x86_64 \
-            | cut -d '"' -f 4)
+          curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
+          source $HOME/.cargo/env
 
-          curl -L "$url" -o rojo.zip
-          unzip rojo.zip
-          chmod +x rojo
-          sudo mv rojo /usr/local/bin/
-
-      - name: Install Darklua
+      - name: Install Rojo via Cargo
         run: |
-          url=$(curl -s https://api.github.com/repos/seaofvoices/darklua/releases/latest \
-            | grep browser_download_url \
-            | grep linux-x86_64 \
-            | cut -d '"' -f 4)
+          source $HOME/.cargo/env
+          cargo install --git https://github.com/rojo-rbx/rojo --branch main rojo
 
-          curl -L "$url" -o darklua.zip
-          unzip darklua.zip
-          chmod +x darklua
-          sudo mv darklua /usr/local/bin/
-
-      - name: Install Wally
+      - name: Install Darklua via Cargo
         run: |
-          url=$(curl -s https://api.github.com/repos/UpliftGames/wally/releases/latest \
-            | grep browser_download_url \
-            | grep linux \
-            | cut -d '"' -f 4)
+          source $HOME/.cargo/env
+          cargo install --git https://github.com/Stefanuk12/darklua --branch hybrid-mode darklua
 
-          curl -L "$url" -o wally.zip
-          unzip wally.zip
-          chmod +x wally
-          sudo mv wally /usr/local/bin/
+      - name: Install Wally via Cargo
+        run: |
+          source $HOME/.cargo/env
+          cargo install --git https://github.com/UpliftGames/wally --branch main wally
 
       - name: Run build script
         run: |
