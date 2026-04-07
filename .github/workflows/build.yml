@@ -20,7 +20,7 @@ jobs:
       - name: Install Rojo via Cargo
         run: |
           source $HOME/.cargo/env
-          cargo install --git https://github.com/rojo-rbx/rojo --branch main rojo
+          cargo install --git https://github.com/rojo-rbx/rojo rojo
 
       - name: Install Darklua via Cargo
         run: |
@@ -30,7 +30,7 @@ jobs:
       - name: Install Wally via Cargo
         run: |
           source $HOME/.cargo/env
-          cargo install --git https://github.com/UpliftGames/wally --branch main wally
+          cargo install --git https://github.com/UpliftGames/wally wally
 
       - name: Run build script
         run: |
