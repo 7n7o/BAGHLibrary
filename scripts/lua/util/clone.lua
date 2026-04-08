@@ -7,13 +7,13 @@ local LocalPlayer = game.Players.LocalPlayer
 local function clone(instance, parent)
     local originalParent = instance.Parent
     return Promise.new(function(res, rej)
-        BAGH:GetCloud():andThen(function(cloud)
+        BAGH:GetCloud(false, false):andThen(function(cloud)
             cloud:SetProperties(instance, {
                 Parent = cloud._tool.Handle
             }):andThen(function()
 
                 cloud:EffectCloud():andThen(function(ec, d)
-                    local i = ec:FindFirstChild(instance.Name)
+                    local i = ec:WaitForChild(instance.Name)
                     cloud:SetProperties(instance, {
                         Parent = originalParent
                     }):catch(rej)
@@ -21,7 +21,7 @@ local function clone(instance, parent)
                     cloud:SetProperties(i, {
                         Parent = parent or LocalPlayer.Character
                     }):andThen(function()
-                        d()
+                        task.delay(1, d)
                         res(i)
                     end):catch(rej)
                 end):catch(rej)

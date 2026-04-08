@@ -12,7 +12,8 @@ return {
 		"Reflectance", "RightSurface",
 		"Size", "TopSurface",
 		"Transparency",
-		"Name"
+		"Name",
+		"Velocity"
 	},
 	Decal = {
 		"Color3",

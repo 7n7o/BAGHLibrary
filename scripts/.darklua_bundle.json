@@ -8,6 +8,7 @@
         "@build": "../build",
         "@src": "../src",
         "@pkg": "../generated/packages",
+        "@util": "lua/util"
       }
     },
     modules_identifier: "_TAD_",

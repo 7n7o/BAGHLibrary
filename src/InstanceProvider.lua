@@ -52,6 +52,14 @@ function InstanceProvider:RequestInstance(Name)
 	end)
 end
 
+function InstanceProvider:SetDesiredAmount(Name, Amount)
+	local Heap = self:GetHeap(Name)
+	if not Heap then
+		error("Heap "..Name.." does not exist")
+	end
+	Heap:SetDesiredAmount(Amount)
+end
+
 function InstanceProvider:GetHeap(Name)
 	return self._heaps[Name]
 end

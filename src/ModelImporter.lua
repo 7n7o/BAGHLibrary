@@ -47,15 +47,17 @@ function ModelImporter:ImportModel(Provider, Model, Cloud, Parent, options)
             end
 		end
 		
+		
 
-
-        
-		local _, parts = Provider:RequestInstances("Part", numParts):await()
+		
+		local _, partRef = Provider:RequestInstance("Part"):await()
 		local m = Model:Clone()
 		Model:Destroy()
 		Model = m
 		
-		
+		local partHeap = Provider:GetHeap("Part")
+		partHeap:SetDesiredAmount(numParts)
+		local parts = partHeap:RequestInstances(numParts):expect()
 		local count = 0
 		local Assigns = {}
 		for _, part in pairs(Model:GetDescendants()) do
@@ -64,7 +66,7 @@ function ModelImporter:ImportModel(Provider, Model, Cloud, Parent, options)
 				
 
 
-				local Properties = buildPropertyDictionary(parts[count], part)
+				local Properties = buildPropertyDictionary(partRef, part)
 				if Properties == false then
 					count -= 1
 					continue
@@ -78,7 +80,7 @@ function ModelImporter:ImportModel(Provider, Model, Cloud, Parent, options)
 					end
 				end
 				
-				local peePee = parts[count]
+				local peePee = count
 				
 				local After = function()
 					local ps = {}
@@ -132,27 +134,30 @@ function ModelImporter:ImportModel(Provider, Model, Cloud, Parent, options)
 		local ctr = 0
 		
 		
+		local afters = {}
 		local Promises = {}
 		repeat
+		
+		if #Assigns == 0 then break end
+		local _, p, prop, after = unpack(table.remove(Assigns))
+		ctr = ctr + 1
+		afters[ctr] = after
+		local promise = Cloud:SetProperties(p, prop)
+		table.insert(Promises, promise)
+		if ctr%batchSize == 0 then
+			Promise.all(Promises):await()
+			Promises = {}
+			task.wait(batchSleep)
+		end
+		
+
+
 			
-			local _, p, prop, after = unpack(table.remove(Assigns))
-			local r = Cloud:SetProperties(p, prop):andThen(function()
-				if after ~= nil and typeof(after) == "function" then
-					after():await()
-				end
-			end)
-			table.insert(Promises, r)
-			ctr = ctr + 1
-			if useDefer and ctr % batchSize == 0 then
-				Promise.all(Promises):await()
-				Promises = {}
-				task.wait(batchSleep)
-			end
 		until #Assigns == 0 
-        repeat task.wait() until #Promises == ctr
-		Promise.all(Promises):andThen(function()
-			res(Parent)
-		end, rej)
+		Promise.all(Promises):await()
+		for _, after in pairs(afters) do
+			after():await()
+		end
     end)
 end
 

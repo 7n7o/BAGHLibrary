@@ -7,6 +7,8 @@ local BAGH = {}
 local Players = game:FindService("Players")
 local LocalPlayer = Players.LocalPlayer
 
+local activeClouds = {}
+
 function BAGH:GetCloud(forceNew, keepActive)
     return Promise.new(function(res, rej)
         local Character = LocalPlayer.Character

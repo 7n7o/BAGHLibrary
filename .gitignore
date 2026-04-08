@@ -7,3 +7,5 @@ Packages/
 wally
 ./wally.lock
 
+# Script bundles
+scripts/bundles/

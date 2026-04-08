@@ -14,7 +14,6 @@ in_dir="src"
 
 echo "Processing source code"
 darklua process $in_dir $out_dir -c ".darklua_build.json"
-sed -i '1s/^local //' $out_dir
 darklua process $out_dir $out_dir -c ".darklua_${branch}.json"
 
 echo "Building rojo project"

@@ -31,8 +31,10 @@ function InstanceHeap.new(Cloud, BaseInstance, Model, Name)
 		FulfillingRequest = false 
 	}
 	
-	Cloud:SetProperties(BaseInstance, {Parent = Model})
+	
 	Cloud:SetProperties(Model, {Name = self.Name.."Heap", Parent = Cloud._tool.Handle}):await()
+	Cloud:SetProperties(BaseInstance, {Parent = Model}):await()
+	print(Model, BaseInstance)
 
 	return self
 end
@@ -55,13 +57,18 @@ end
 
 function InstanceHeap:_doubleIt()
 	return self._cloud:EffectCloud():andThen(function(e)
-		local ps = {}
+		
 		local is = {}
-		for _,v in ipairs(e:WaitForChild(self._model.Name):GetChildren()) do
+		local ps = {}
+		local children = e:WaitForChild(self._model.Name):GetChildren()
+		repeat
+			
+			if #children == 0 then break end
+			local v = table.remove(children)
 			local p = self._cloud:SetProperties(v, {Parent = self._model})
 			table.insert(ps, p)
 			table.insert(is, v)
-		end
+		until #children == 0
 		Promise.all(ps):await()
 		return is
 	end)

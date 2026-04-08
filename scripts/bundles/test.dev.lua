@@ -2,15 +2,12 @@ _TAD_ = {cache = {}}
 
 do
     do
-        local function __modImpl(
-        )
+        local function __modImpl()
             local ERROR_NON_PROMISE_IN_LIST, ERROR_NON_LIST, ERROR_NON_FUNCTION, MODE_KEY_METATABLE = 'Non-promise value passed into %s at index %s', 'Please pass a list of promises to %s', 'Please pass a handler function to %s!', {
                 __mode = 'k',
             }
 
-            local function isCallable(
-                value
-            )
+            local function isCallable(value)
                 if type(value) == 'function' then
                     return true
                 end
@@ -24,10 +21,7 @@ do
 
                 return false
             end
-            local function makeEnum(
-                enumName,
-                members
-            )
+            local function makeEnum(enumName, members)
                 local enum = {}
 
                 for _, memberName in ipairs(members)do
@@ -35,14 +29,10 @@ do
                 end
 
                 return setmetatable(enum, {
-                    __index = function(
-                        _,
-                        k
-                    )
+                    __index = function(_, k)
                         error(string.format('%s is not in %s!', k, enumName), 2)
                     end,
-                    __newindex = function(
-                    )
+                    __newindex = function()
                         error(string.format('Creating new members in %s is not allowed!', enumName), 2)
                     end,
                 })
@@ -61,10 +51,7 @@ do
                 }
                 Error.__index = Error
 
-                function Error.new(
-                    options,
-                    parent
-                )
+                function Error.new(options, parent)
                     options = options or {}
 
                     return setmetatable({
@@ -77,9 +64,7 @@ do
                         createdTrace = debug.traceback(),
                     }, Error)
                 end
-                function Error.is(
-                    anything
-                )
+                function Error.is(anything)
                     if type(anything) == 'table' then
                         local metatable = getmetatable(anything)
 
@@ -90,24 +75,18 @@ do
 
                     return false
                 end
-                function Error.isKind(
-                    anything,
-                    kind
-                )
+                function Error.isKind(anything, kind)
                     assert(kind ~= nil, 'Argument #2 to Promise.Error.isKind must not be nil')
 
                     return Error.is(anything) and anything.kind == kind
                 end
-                function Error:extend(
-                    options
-                )
+                function Error:extend(options)
                     options = options or {}
                     options.kind = options.kind or self.kind
 
                     return Error.new(options, self)
                 end
-                function Error:getErrorChain(
-                )
+                function Error:getErrorChain()
                     local runtimeErrors = {self}
 
                     while runtimeErrors[#runtimeErrors].parent do
@@ -116,8 +95,7 @@ do
 
                     return runtimeErrors
                 end
-                function Error:__tostring(
-                )
+                function Error:__tostring()
                     local errorStrings = {
                         string.format('-- Promise.Error(%s) --', self.kind or '?'),
                     }
@@ -133,27 +111,16 @@ do
                 end
             end
 
-            local function pack(
-                ...
-            )
-                return select('#', 
-...), {...}
+            local function pack(...)
+                return select('#', ...), {...}
             end
-            local function packResult(
-                success,
-                ...
-            )
-                return success, select('#', 
-...), {...}
+            local function packResult(success, ...)
+                return success, select('#', ...), {...}
             end
-            local function makeErrorHandler(
-                traceback
-            )
+            local function makeErrorHandler(traceback)
                 assert(traceback ~= nil, 'traceback is nil')
 
-                return function(
-                    err
-                )
+                return function(err)
                     if type(err) == 'table' then
                         return err
                     end
@@ -166,23 +133,12 @@ do
                     })
                 end
             end
-            local function runExecutor(
-                traceback,
-                callback,
-                ...
-            )
+            local function runExecutor(traceback, callback, ...)
                 return packResult(xpcall(callback, makeErrorHandler(traceback), 
 ...))
             end
-            local function createAdvancer(
-                traceback,
-                callback,
-                resolve,
-                reject
-            )
-                return function(
-                    ...
-                )
+            local function createAdvancer(traceback, callback, resolve, reject)
+                return function(...)
                     local ok, resultLength, result = runExecutor(traceback, callback, 
 ...)
 
@@ -193,9 +149,7 @@ do
                     end
                 end
             end
-            local function isEmpty(
-                t
-            )
+            local function isEmpty(t)
                 return next(t) == nil
             end
 
@@ -215,11 +169,7 @@ do
             Promise.prototype = {}
             Promise.__index = Promise.prototype
 
-            function Promise._new(
-                traceback,
-                callback,
-                parent
-            )
+            function Promise._new(traceback, callback, parent)
                 if parent ~= nil and not Promise.is(parent) then
                     error('Argument #2 to Promise.new must be a promise or nil', 2)
                 end
@@ -229,8 +179,7 @@ do
                     _source = traceback,
                     _status = Promise.Status.Started,
                     _values = nil,
-                    _valuesLength = 
--1,
+                    _valuesLength = -1,
                     _unhandledRejection = true,
                     _queuedResolve = {},
                     _queuedReject = {},
@@ -246,21 +195,13 @@ do
 
                 setmetatable(self, Promise)
 
-                local function resolve(
-                    ...
-                )
-                    self:_resolve(
-...)
+                local function resolve(...)
+                    self:_resolve(...)
                 end
-                local function reject(
-                    ...
-                )
-                    self:_reject(
-...)
+                local function reject(...)
+                    self:_reject(...)
                 end
-                local function onCancel(
-                    cancellationHook
-                )
+                local function onCancel(cancellationHook)
                     if cancellationHook then
                         if self._status == Promise.Status.Cancelled then
                             cancellationHook()
@@ -272,8 +213,7 @@ do
                     return self._status == Promise.Status.Cancelled
                 end
 
-                self._thread = coroutine.create(function(
-                )
+                self._thread = coroutine.create(function()
                     local ok, _, result = runExecutor(self._source, callback, resolve, reject, onCancel)
 
                     if not ok then
@@ -285,18 +225,13 @@ do
 
                 return self
             end
-            function Promise.new(
-                executor
-            )
+            function Promise.new(executor)
                 return Promise._new(debug.traceback(nil, 2), executor)
             end
-            function Promise:__tostring(
-            )
+            function Promise:__tostring()
                 return string.format('Promise(%s)', self._status)
             end
-            function Promise.defer(
-                executor
-            )
+            function Promise.defer(executor)
                 local traceback, promise = debug.traceback(nil, 2), nil
 
                 promise = Promise._new(traceback, function(
@@ -306,8 +241,7 @@ do
                 )
                     local connection
 
-                    connection = Promise._timeEvent:Connect(function(
-                    )
+                    connection = Promise._timeEvent:Connect(function()
                         connection:Disconnect()
 
                         local ok, _, result = runExecutor(traceback, executor, resolve, reject, onCancel)
@@ -323,23 +257,15 @@ do
 
             Promise.async = Promise.defer
 
-            function Promise.resolve(
-                ...
-            )
-                local length, values = pack(
-...)
+            function Promise.resolve(...)
+                local length, values = pack(...)
 
-                return Promise._new(debug.traceback(nil, 2), function(
-                    resolve
-                )
+                return Promise._new(debug.traceback(nil, 2), function(resolve)
                     resolve(unpack(values, 1, length))
                 end)
             end
-            function Promise.reject(
-                ...
-            )
-                local length, values = pack(
-...)
+            function Promise.reject(...)
+                local length, values = pack(...)
 
                 return Promise._new(debug.traceback(nil, 2), function(
                     _,
@@ -348,32 +274,17 @@ do
                     reject(unpack(values, 1, length))
                 end)
             end
-            function Promise._try(
-                traceback,
-                callback,
-                ...
-            )
-                local valuesLength, values = pack(
-...)
+            function Promise._try(traceback, callback, ...)
+                local valuesLength, values = pack(...)
 
-                return Promise._new(traceback, function(
-                    resolve
-                )
+                return Promise._new(traceback, function(resolve)
                     resolve(callback(unpack(values, 1, valuesLength)))
                 end)
             end
-            function Promise.try(
-                callback,
-                ...
-            )
-                return Promise._try(debug.traceback(nil, 2), callback, 
-...)
+            function Promise.try(callback, ...)
+                return Promise._try(debug.traceback(nil, 2), callback, ...)
             end
-            function Promise._all(
-                traceback,
-                promises,
-                amount
-            )
+            function Promise._all(traceback, promises, amount)
                 if type(promises) ~= 'table' then
                     error(string.format(ERROR_NON_LIST, 'Promise.all'), 3)
                 end
@@ -395,16 +306,12 @@ do
                 )
                     local resolvedValues, newPromises, resolvedCount, rejectedCount, done = {}, {}, 0, 0, false
 
-                    local function cancel(
-                    )
+                    local function cancel()
                         for _, promise in ipairs(newPromises)do
                             promise:cancel()
                         end
                     end
-                    local function resolveOne(
-                        i,
-                        ...
-                    )
+                    local function resolveOne(i, ...)
                         if done then
                             return
                         end
@@ -412,11 +319,9 @@ do
                         resolvedCount = resolvedCount + 1
 
                         if amount == nil then
-                            resolvedValues[i] = 
-...
+                            resolvedValues[i] = ...
                         else
-                            resolvedValues[resolvedCount] = 
-...
+                            resolvedValues[resolvedCount] = ...
                         end
                         if resolvedCount >= (amount or #promises) then
                             done = true
@@ -429,14 +334,9 @@ do
                     onCancel(cancel)
 
                     for i, promise in ipairs(promises)do
-                        newPromises[i] = promise:andThen(function(
-                            ...
-                        )
-                            resolveOne(i, 
-...)
-                        end, function(
-                            ...
-                        )
+                        newPromises[i] = promise:andThen(function(...)
+                            resolveOne(i, ...)
+                        end, function(...)
                             rejectedCount = rejectedCount + 1
 
                             if amount == nil or #promises - rejectedCount < amount then
@@ -444,8 +344,7 @@ do
 
                                 done = true
 
-                                reject(
-...)
+                                reject(...)
                             end
                         end)
                     end
@@ -455,55 +354,38 @@ do
                     end
                 end)
             end
-            function Promise.all(
-                promises
-            )
+            function Promise.all(promises)
                 return Promise._all(debug.traceback(nil, 2), promises)
             end
-            function Promise.fold(
-                list,
-                reducer,
-                initialValue
-            )
+            function Promise.fold(list, reducer, initialValue)
                 assert(type(list) == 'table', 'Bad argument #1 to Promise.fold: must be a table')
                 assert(isCallable(reducer), 'Bad argument #2 to Promise.fold: must be a function')
 
                 local accumulator = Promise.resolve(initialValue)
 
-                return Promise.each(list, function(
-                    resolvedElement,
-                    i
-                )
+                return Promise.each(list, function(resolvedElement, i)
                     accumulator = accumulator:andThen(function(
                         previousValueResolved
                     )
                         return reducer(previousValueResolved, resolvedElement, i)
                     end)
-                end):andThen(function(
-                )
+                end):andThen(function()
                     return accumulator
                 end)
             end
-            function Promise.some(
-                promises,
-                count
-            )
+            function Promise.some(promises, count)
                 assert(type(count) == 'number', 'Bad argument #2 to Promise.some: must be a number')
 
                 return Promise._all(debug.traceback(nil, 2), promises, count)
             end
-            function Promise.any(
-                promises
-            )
+            function Promise.any(promises)
                 return Promise._all(debug.traceback(nil, 2), promises, 1):andThen(function(
                     values
                 )
                     return values[1]
                 end)
             end
-            function Promise.allSettled(
-                promises
-            )
+            function Promise.allSettled(promises)
                 if type(promises) ~= 'table' then
                     error(string.format(ERROR_NON_LIST, 'Promise.allSettled'), 2)
                 end
@@ -525,39 +407,29 @@ do
                 )
                     local fates, newPromises, finishedCount = {}, {}, 0
 
-                    local function resolveOne(
-                        i,
-                        ...
-                    )
+                    local function resolveOne(i, ...)
                         finishedCount = finishedCount + 1
-                        fates[i] = 
-...
+                        fates[i] = ...
 
                         if finishedCount >= #promises then
                             resolve(fates)
                         end
                     end
 
-                    onCancel(function(
-                    )
+                    onCancel(function()
                         for _, promise in ipairs(newPromises)do
                             promise:cancel()
                         end
                     end)
 
                     for i, promise in ipairs(promises)do
-                        newPromises[i] = promise:finally(function(
-                            ...
-                        )
-                            resolveOne(i, 
-...)
+                        newPromises[i] = promise:finally(function(...)
+                            resolveOne(i, ...)
                         end)
                     end
                 end)
             end
-            function Promise.race(
-                promises
-            )
+            function Promise.race(promises)
                 assert(type(promises) == 'table', string.format(ERROR_NON_LIST, 'Promise.race'))
 
                 for i, promise in pairs(promises)do
@@ -571,24 +443,18 @@ do
                 )
                     local newPromises, finished = {}, false
 
-                    local function cancel(
-                    )
+                    local function cancel()
                         for _, promise in ipairs(newPromises)do
                             promise:cancel()
                         end
                     end
-                    local function finalize(
-                        callback
-                    )
-                        return function(
-                            ...
-                        )
+                    local function finalize(callback)
+                        return function(...)
                             cancel()
 
                             finished = true
 
-                            return callback(
-...)
+                            return callback(...)
                         end
                     end
 
@@ -605,10 +471,7 @@ do
                     end
                 end)
             end
-            function Promise.each(
-                list,
-                predicate
-            )
+            function Promise.each(list, predicate)
                 assert(type(list) == 'table', string.format(ERROR_NON_LIST, 'Promise.each'))
                 assert(isCallable(predicate), string.format(ERROR_NON_FUNCTION, 'Promise.each'))
 
@@ -619,15 +482,13 @@ do
                 )
                     local results, promisesToCancel, cancelled = {}, {}, false
 
-                    local function cancel(
-                    )
+                    local function cancel()
                         for _, promiseToCancel in ipairs(promisesToCancel)do
                             promiseToCancel:cancel()
                         end
                     end
 
-                    onCancel(function(
-                    )
+                    onCancel(function()
                         cancelled = true
 
                         cancel()
@@ -656,11 +517,8 @@ That Promise was created at:
                                 return reject(select(2, value:await()))
                             end
 
-                            local ourPromise = value:andThen(function(
-                                ...
-                            )
-                                return 
-...
+                            local ourPromise = value:andThen(function(...)
+                                return ...
                             end)
 
                             table.insert(promisesToCancel, ourPromise)
@@ -704,9 +562,7 @@ That Promise was created at:
                     resolve(results)
                 end)
             end
-            function Promise.is(
-                object
-            )
+            function Promise.is(object)
                 if type(object) ~= 'table' then
                     return false
                 end
@@ -723,23 +579,16 @@ That Promise was created at:
 
                 return false
             end
-            function Promise.promisify(
-                callback
-            )
-                return function(
-                    ...
-                )
-                    return Promise._try(debug.traceback(nil, 2), callback, 
-...)
+            function Promise.promisify(callback)
+                return function(...)
+                    return Promise._try(debug.traceback(nil, 2), callback, ...)
                 end
             end
 
             do
                 local first, connection
 
-                function Promise.delay(
-                    seconds
-                )
+                function Promise.delay(seconds)
                     assert(type(seconds) == 'number', 'Bad argument #1 to Promise.delay, must be a number.')
 
                     if not (seconds >= 1 / 60) or seconds == math.huge then
@@ -761,8 +610,7 @@ That Promise was created at:
 
                         if connection == nil then
                             first = node
-                            connection = Promise._timeEvent:Connect(function(
-                            )
+                            connection = Promise._timeEvent:Connect(function()
                                 local threadStart = Promise._getTime()
 
                                 while first ~= nil and first.endTime < threadStart do
@@ -805,8 +653,7 @@ That Promise was created at:
                             end
                         end
 
-                        onCancel(function(
-                        )
+                        onCancel(function()
                             local next = node.next
 
                             if first == node then
@@ -833,15 +680,11 @@ That Promise was created at:
                 end
             end
 
-            function Promise.prototype:timeout(
-                seconds,
-                rejectionValue
-            )
+            function Promise.prototype:timeout(seconds, rejectionValue)
                 local traceback = debug.traceback(nil, 2)
 
                 return Promise.race({
-                    Promise.delay(seconds):andThen(function(
-                    )
+                    Promise.delay(seconds):andThen(function()
                         return Promise.reject(rejectionValue == nil and Error.new({
                             kind = Error.Kind.TimedOut,
                             error = 'Timed out',
@@ -851,8 +694,7 @@ That Promise was created at:
                     self,
                 })
             end
-            function Promise.prototype:getStatus(
-            )
+            function Promise.prototype:getStatus()
                 return self._status
             end
             function Promise.prototype:_andThen(
@@ -863,8 +705,7 @@ That Promise was created at:
                 self._unhandledRejection = false
 
                 if self._status == Promise.Status.Cancelled then
-                    local promise = Promise.new(function(
-                    ) end)
+                    local promise = Promise.new(function() end)
 
                     promise:cancel()
 
@@ -890,8 +731,7 @@ That Promise was created at:
                     if self._status == Promise.Status.Started then
                         table.insert(self._queuedResolve, successCallback)
                         table.insert(self._queuedReject, failureCallback)
-                        onCancel(function(
-                        )
+                        onCancel(function()
                             if self._status == Promise.Status.Started then
                                 table.remove(self._queuedResolve, table.find(self._queuedResolve, successCallback))
                                 table.remove(self._queuedReject, table.find(self._queuedReject, failureCallback))
@@ -904,74 +744,51 @@ That Promise was created at:
                     end
                 end, self)
             end
-            function Promise.prototype:andThen(
-                successHandler,
-                failureHandler
-            )
+            function Promise.prototype:andThen(successHandler, failureHandler)
                 assert(successHandler == nil or isCallable(successHandler), string.format(ERROR_NON_FUNCTION, 'Promise:andThen'))
                 assert(failureHandler == nil or isCallable(failureHandler), string.format(ERROR_NON_FUNCTION, 'Promise:andThen'))
 
                 return self:_andThen(debug.traceback(nil, 2), successHandler, failureHandler)
             end
-            function Promise.prototype:catch(
-                failureHandler
-            )
+            function Promise.prototype:catch(failureHandler)
                 assert(failureHandler == nil or isCallable(failureHandler), string.format(ERROR_NON_FUNCTION, 'Promise:catch'))
 
                 return self:_andThen(debug.traceback(nil, 2), nil, failureHandler)
             end
-            function Promise.prototype:tap(
-                tapHandler
-            )
+            function Promise.prototype:tap(tapHandler)
                 assert(isCallable(tapHandler), string.format(ERROR_NON_FUNCTION, 'Promise:tap'))
 
-                return self:_andThen(debug.traceback(nil, 2), function(
-                    ...
-                )
-                    local callbackReturn = tapHandler(
-...)
+                return self:_andThen(debug.traceback(nil, 2), function(...)
+                    local callbackReturn = tapHandler(...)
 
                     if Promise.is(callbackReturn) then
-                        local length, values = pack(
-...)
+                        local length, values = pack(...)
 
-                        return callbackReturn:andThen(function(
-                        )
+                        return callbackReturn:andThen(function()
                             return unpack(values, 1, length)
                         end)
                     end
 
-                    return 
-...
+                    return ...
                 end)
             end
-            function Promise.prototype:andThenCall(
-                callback,
-                ...
-            )
+            function Promise.prototype:andThenCall(callback, ...)
                 assert(isCallable(callback), string.format(ERROR_NON_FUNCTION, 'Promise:andThenCall'))
 
-                local length, values = pack(
-...)
+                local length, values = pack(...)
 
-                return self:_andThen(debug.traceback(nil, 2), function(
-                )
+                return self:_andThen(debug.traceback(nil, 2), function()
                     return callback(unpack(values, 1, length))
                 end)
             end
-            function Promise.prototype:andThenReturn(
-                ...
-            )
-                local length, values = pack(
-...)
+            function Promise.prototype:andThenReturn(...)
+                local length, values = pack(...)
 
-                return self:_andThen(debug.traceback(nil, 2), function(
-                )
+                return self:_andThen(debug.traceback(nil, 2), function()
                     return unpack(values, 1, length)
                 end)
             end
-            function Promise.prototype:cancel(
-            )
+            function Promise.prototype:cancel()
                 if self._status ~= Promise.Status.Started then
                     return
                 end
@@ -994,9 +811,7 @@ That Promise was created at:
 
                 self:_finalize()
             end
-            function Promise.prototype:_consumerCancelled(
-                consumer
-            )
+            function Promise.prototype:_consumerCancelled(consumer)
                 if self._status ~= Promise.Status.Started then
                     return
                 end
@@ -1007,10 +822,7 @@ That Promise was created at:
                     self:cancel()
                 end
             end
-            function Promise.prototype:_finally(
-                traceback,
-                finallyHandler
-            )
+            function Promise.prototype:_finally(traceback, finallyHandler)
                 self._unhandledRejection = false
 
                 local promise = Promise._new(traceback, function(
@@ -1020,8 +832,7 @@ That Promise was created at:
                 )
                     local handlerPromise
 
-                    onCancel(function(
-                    )
+                    onCancel(function()
                         self:_consumerCancelled(self)
 
                         if handlerPromise then
@@ -1032,26 +843,18 @@ That Promise was created at:
                     local finallyCallback = resolve
 
                     if finallyHandler then
-                        finallyCallback = function(
-                            ...
-                        )
-                            local callbackReturn = finallyHandler(
-...)
+                        finallyCallback = function(...)
+                            local callbackReturn = finallyHandler(...)
 
                             if Promise.is(callbackReturn) then
                                 handlerPromise = callbackReturn
 
-                                callbackReturn:finally(function(
-                                    status
-                                )
+                                callbackReturn:finally(function(status)
                                     if status ~= Promise.Status.Rejected then
                                         resolve(self)
                                     end
-                                end):catch(function(
-                                    ...
-                                )
-                                    reject(
-...)
+                                end):catch(function(...)
+                                    reject(...)
                                 end)
                             else
                                 resolve(self)
@@ -1067,50 +870,36 @@ That Promise was created at:
 
                 return promise
             end
-            function Promise.prototype:finally(
-                finallyHandler
-            )
+            function Promise.prototype:finally(finallyHandler)
                 assert(finallyHandler == nil or isCallable(finallyHandler), string.format(ERROR_NON_FUNCTION, 'Promise:finally'))
 
                 return self:_finally(debug.traceback(nil, 2), finallyHandler)
             end
-            function Promise.prototype:finallyCall(
-                callback,
-                ...
-            )
+            function Promise.prototype:finallyCall(callback, ...)
                 assert(isCallable(callback), string.format(ERROR_NON_FUNCTION, 'Promise:finallyCall'))
 
-                local length, values = pack(
-...)
+                local length, values = pack(...)
 
-                return self:_finally(debug.traceback(nil, 2), function(
-                )
+                return self:_finally(debug.traceback(nil, 2), function()
                     return callback(unpack(values, 1, length))
                 end)
             end
-            function Promise.prototype:finallyReturn(
-                ...
-            )
-                local length, values = pack(
-...)
+            function Promise.prototype:finallyReturn(...)
+                local length, values = pack(...)
 
-                return self:_finally(debug.traceback(nil, 2), function(
-                )
+                return self:_finally(debug.traceback(nil, 2), function()
                     return unpack(values, 1, length)
                 end)
             end
-            function Promise.prototype:awaitStatus(
-            )
+            function Promise.prototype:awaitStatus()
                 self._unhandledRejection = false
 
                 if self._status == Promise.Status.Started then
                     local thread = coroutine.running()
 
-                    self:finally(function(
-                    )
+                    self:finally(function()
                         task.spawn(thread)
-                    end):catch(function(
-                    ) end)
+                    end):catch(function() end)
                     coroutine.yield()
                 end
                 if self._status == Promise.Status.Resolved then
@@ -1122,42 +911,30 @@ That Promise was created at:
                 return self._status
             end
 
-            local function awaitHelper(
-                status,
-                ...
-            )
-                return status == Promise.Status.Resolved, 
-...
+            local function awaitHelper(status, ...)
+                return status == Promise.Status.Resolved, ...
             end
 
-            function Promise.prototype:await(
-            )
+            function Promise.prototype:await()
                 return awaitHelper(self:awaitStatus())
             end
 
-            local function expectHelper(
-                status,
-                ...
-            )
+            local function expectHelper(status, ...)
                 if status ~= Promise.Status.Resolved then
-                    error((
-...) == nil and 'Expected Promise rejected with no value.' or (
+                    error((...) == nil and 'Expected Promise rejected with no value.' or (
 ...), 3)
                 end
 
-                return 
-...
+                return ...
             end
 
-            function Promise.prototype:expect(
-            )
+            function Promise.prototype:expect()
                 return expectHelper(self:awaitStatus())
             end
 
             Promise.prototype.awaitValue = Promise.prototype.expect
 
-            function Promise.prototype:_unwrap(
-            )
+            function Promise.prototype:_unwrap()
                 if self._status == Promise.Status.Started then
                     error('Promise has not resolved or rejected.', 2)
                 end
@@ -1166,37 +943,25 @@ That Promise was created at:
 
                 return success, unpack(self._values, 1, self._valuesLength)
             end
-            function Promise.prototype:_resolve(
-                ...
-            )
+            function Promise.prototype:_resolve(...)
                 if self._status ~= Promise.Status.Started then
-                    if Promise.is((
-...)) then
-                        (
-...):_consumerCancelled(self)
+                    if Promise.is((...)) then
+                        (...):_consumerCancelled(self)
                     end
 
                     return
                 end
-                if Promise.is((
-...)) then
-                    if select('#', 
-...) > 1 then
+                if Promise.is((...)) then
+                    if select('#', ...) > 1 then
                         local message = string.format('When returning a Promise from andThen, extra arguments are ' .. 'discarded! See:\n\n%s', self._source)
 
                         warn(message)
                     end
 
-                    local chainedPromise = 
-...
-                    local promise = chainedPromise:andThen(function(
-                        ...
-                    )
-                        self:_resolve(
-...)
-                    end, function(
-                        ...
-                    )
+                    local chainedPromise = ...
+                    local promise = chainedPromise:andThen(function(...)
+                        self:_resolve(...)
+                    end, function(...)
                         local maybeRuntimeError = chainedPromise._values[1]
 
                         if chainedPromise._error then
@@ -1220,8 +985,7 @@ That Promise was created at:
                             }))
                         end
 
-                        self:_reject(
-...)
+                        self:_reject(...)
                     end)
 
                     if promise._status == Promise.Status.Cancelled then
@@ -1235,38 +999,30 @@ That Promise was created at:
                 end
 
                 self._status = Promise.Status.Resolved
-                self._valuesLength, self._values = pack(
-...)
+                self._valuesLength, self._values = pack(...)
 
                 for _, callback in ipairs(self._queuedResolve)do
-                    coroutine.wrap(callback)(
-...)
+                    coroutine.wrap(callback)(...)
                 end
 
                 self:_finalize()
             end
-            function Promise.prototype:_reject(
-                ...
-            )
+            function Promise.prototype:_reject(...)
                 if self._status ~= Promise.Status.Started then
                     return
                 end
 
                 self._status = Promise.Status.Rejected
-                self._valuesLength, self._values = pack(
-...)
+                self._valuesLength, self._values = pack(...)
 
                 if not isEmpty(self._queuedReject) then
                     for _, callback in ipairs(self._queuedReject)do
-                        coroutine.wrap(callback)(
-...)
+                        coroutine.wrap(callback)(...)
                     end
                 else
-                    local err = tostring((
-...))
+                    local err = tostring((...))
 
-                    coroutine.wrap(function(
-                    )
+                    coroutine.wrap(function()
                         Promise._timeEvent:Wait()
 
                         if not self._unhandledRejection then
@@ -1289,8 +1045,7 @@ That Promise was created at:
 
                 self:_finalize()
             end
-            function Promise.prototype:_finalize(
-            )
+            function Promise.prototype:_finalize()
                 for _, callback in ipairs(self._queuedFinally)do
                     coroutine.wrap(callback)(self._status)
                 end
@@ -1306,17 +1061,12 @@ That Promise was created at:
 
                 task.defer(coroutine.close, self._thread)
             end
-            function Promise.prototype:now(
-                rejectionValue
-            )
+            function Promise.prototype:now(rejectionValue)
                 local traceback = debug.traceback(nil, 2)
 
                 if self._status == Promise.Status.Resolved then
-                    return self:_andThen(traceback, function(
-                        ...
-                    )
-                        return 
-...
+                    return self:_andThen(traceback, function(...)
+                        return ...
                     end)
                 else
                     return Promise.reject(rejectionValue == nil and Error.new({
@@ -1326,64 +1076,39 @@ That Promise was created at:
                     }) or rejectionValue)
                 end
             end
-            function Promise.retry(
-                callback,
-                times,
-                ...
-            )
+            function Promise.retry(callback, times, ...)
                 assert(isCallable(callback), 'Parameter #1 to Promise.retry must be a function')
                 assert(type(times) == 'number', 'Parameter #2 to Promise.retry must be a number')
 
-                local args, length = {
-...}, select('#', 
-...)
+                local args, length = {...}, select('#', ...)
 
-                return Promise.resolve(callback(
-...)):catch(function(
-                    ...
-                )
+                return Promise.resolve(callback(...)):catch(function(...)
                     if times > 0 then
                         return Promise.retry(callback, times - 1, unpack(args, 1, length))
                     else
-                        return Promise.reject(
-...)
+                        return Promise.reject(...)
                     end
                 end)
             end
-            function Promise.retryWithDelay(
-                callback,
-                times,
-                seconds,
-                ...
-            )
+            function Promise.retryWithDelay(callback, times, seconds, ...)
                 assert(isCallable(callback), 'Parameter #1 to Promise.retry must be a function')
                 assert(type(times) == 'number', 'Parameter #2 (times) to Promise.retry must be a number')
                 assert(type(seconds) == 'number', 'Parameter #3 (seconds) to Promise.retry must be a number')
 
-                local args, length = {
-...}, select('#', 
-...)
+                local args, length = {...}, select('#', ...)
 
-                return Promise.resolve(callback(
-...)):catch(function(
-                    ...
-                )
+                return Promise.resolve(callback(...)):catch(function(...)
                     if times > 0 then
                         Promise.delay(seconds):await()
 
                         return Promise.retryWithDelay(callback, times - 1, seconds, unpack(args, 1, length))
                     else
-                        return Promise.reject(
-...)
+                        return Promise.reject(...)
                     end
                 end)
             end
-            function Promise.fromEvent(
-                event,
-                predicate
-            )
-                predicate = predicate or function(
-                )
+            function Promise.fromEvent(event, predicate)
+                predicate = predicate or function()
                     return true
                 end
 
@@ -1394,22 +1119,17 @@ That Promise was created at:
                 )
                     local connection, shouldDisconnect = nil, false
 
-                    local function disconnect(
-                    )
+                    local function disconnect()
                         connection:Disconnect()
 
                         connection = nil
                     end
 
-                    connection = event:Connect(function(
-                        ...
-                    )
-                        local callbackValue = predicate(
-...)
+                    connection = event:Connect(function(...)
+                        local callbackValue = predicate(...)
 
                         if callbackValue == true then
-                            resolve(
-...)
+                            resolve(...)
 
                             if connection then
                                 disconnect()
@@ -1428,13 +1148,10 @@ That Promise was created at:
                     onCancel(disconnect)
                 end)
             end
-            function Promise.onUnhandledRejection(
-                callback
-            )
+            function Promise.onUnhandledRejection(callback)
                 table.insert(Promise._unhandledRejectionCallbacks, callback)
 
-                return function(
-                )
+                return function()
                     local index = table.find(Promise._unhandledRejectionCallbacks, callback)
 
                     if index then
@@ -1446,8 +1163,7 @@ That Promise was created at:
             return Promise
         end
 
-        function _TAD_.a(
-        )
+        function _TAD_.a()
             local v = _TAD_.cache.a
 
             if not v then
@@ -1461,13 +1177,11 @@ That Promise was created at:
         end
     end
     do
-        local function __modImpl(
-        )
+        local function __modImpl()
             return _TAD_.a()
         end
 
-        function _TAD_.b(
-        )
+        function _TAD_.b()
             local v = _TAD_.cache.b
 
             if not v then
@@ -1481,36 +1195,25 @@ That Promise was created at:
         end
     end
     do
-        local function __modImpl(
-        )
+        local function __modImpl()
             local Maid = {}
 
             Maid.ClassName = 'Maid'
 
-            function Maid.new(
-            )
+            function Maid.new()
                 return (setmetatable({_tasks = {}}, Maid))
             end
-            function Maid.isMaid(
-                value
-            )
+            function Maid.isMaid(value)
                 return type(value) == 'table' and value.ClassName == 'Maid'
             end
-            function Maid.__index(
-                self,
-                index
-            )
+            function Maid.__index(self, index)
                 if Maid[index] then
                     return Maid[index]
                 else
                     return self._tasks[index]
                 end
             end
-            function Maid.__newindex(
-                self,
-                index,
-                newTask
-            )
+            function Maid.__newindex(self, index, newTask)
                 if Maid[index] ~= nil then
                     error(string.format("Cannot use '%s' as a Maid key", tostring(index)), 2)
                 end
@@ -1541,14 +1244,12 @@ That Promise was created at:
                         local cancelled
 
                         if coroutine.running() ~= job then
-                            cancelled = pcall(function(
-                            )
+                            cancelled = pcall(function()
                                 task.cancel(job)
                             end)
                         end
                         if not cancelled then
-                            task.defer(function(
-                            )
+                            task.defer(function()
                                 task.cancel(job)
                             end)
                         end
@@ -1557,10 +1258,7 @@ That Promise was created at:
                     end
                 end
             end
-            function Maid.Add(
-                self,
-                task
-            )
+            function Maid.Add(self, task)
                 if not task then
                     error('Task cannot be false or nil', 2)
                 end
@@ -1573,10 +1271,7 @@ That Promise was created at:
 
                 return task
             end
-            function Maid.GiveTask(
-                self,
-                task
-            )
+            function Maid.GiveTask(self, task)
                 if not task then
                     error('Task cannot be false or nil', 2)
                 end
@@ -1594,10 +1289,7 @@ That Promise was created at:
 
                 return taskId
             end
-            function Maid.GivePromise(
-                self,
-                promise
-            )
+            function Maid.GivePromise(self, promise)
                 if not promise:IsPending() then
                     return promise
                 end
@@ -1605,16 +1297,13 @@ That Promise was created at:
                 local newPromise = promise.resolved(promise)
                 local id = self:GiveTask(newPromise)
 
-                newPromise:Finally(function(
-                )
+                newPromise:Finally(function()
                     self[id] = nil
                 end)
 
                 return newPromise
             end
-            function Maid.DoCleaning(
-                self
-            )
+            function Maid.DoCleaning(self)
                 local tasks = self._tasks
 
                 for index, job in tasks do
@@ -1644,16 +1333,14 @@ That Promise was created at:
                         local cancelled
 
                         if coroutine.running() ~= job then
-                            cancelled = pcall(function(
-                            )
+                            cancelled = pcall(function()
                                 task.cancel(job)
                             end)
                         end
                         if not cancelled then
                             local toCancel = job
 
-                            task.defer(function(
-                            )
+                            task.defer(function()
                                 task.cancel(toCancel)
                             end)
                         end
@@ -1664,9 +1351,7 @@ That Promise was created at:
                     index, job = next(tasks)
                 end
             end
-            function Maid.FullClean(
-                self
-            )
+            function Maid.FullClean(self)
                 self:DoCleaning()
                 setmetatable(self, nil)
             end
@@ -1676,8 +1361,7 @@ That Promise was created at:
             return Maid
         end
 
-        function _TAD_.c(
-        )
+        function _TAD_.c()
             local v = _TAD_.cache.c
 
             if not v then
@@ -1691,13 +1375,11 @@ That Promise was created at:
         end
     end
     do
-        local function __modImpl(
-        )
+        local function __modImpl()
             return _TAD_.c()
         end
 
-        function _TAD_.d(
-        )
+        function _TAD_.d()
             local v = _TAD_.cache.d
 
             if not v then
@@ -1711,8 +1393,7 @@ That Promise was created at:
         end
     end
     do
-        local function __modImpl(
-        )
+        local function __modImpl()
             local Cloud = {}
 
             Cloud.__index = Cloud
@@ -1720,10 +1401,7 @@ That Promise was created at:
             local Players = game:FindService('Players')
             local LocalPlayer, Promise, Maid = Players.LocalPlayer, _TAD_.b(), _TAD_.d()
 
-            local function assertw(
-                condition,
-                message
-            )
+            local function assertw(condition, message)
                 if not condition then
                     warn(message)
 
@@ -1731,10 +1409,7 @@ That Promise was created at:
                 end
             end
 
-            function Cloud.new(
-                CloudTool,
-                keepActive
-            )
+            function Cloud.new(CloudTool, keepActive)
                 local self = setmetatable({}, Cloud)
 
                 self._tool = CloudTool
@@ -1745,8 +1420,7 @@ That Promise was created at:
 
                 return self
             end
-            function Cloud:Init(
-            )
+            function Cloud:Init()
                 local Character, Backpack = LocalPlayer.Character, LocalPlayer.Backpack
                 local Humanoid, Tool = Character:FindFirstChildOfClass('Humanoid'), self._tool
 
@@ -1773,8 +1447,7 @@ That Promise was created at:
                 if Tool.Parent == Character and not (Tool.Handle:FindFirstChildOfClass('SpecialMesh') and Tool.Handle:FindFirstChildOfClass('SpecialMesh').MeshId == 'rbxassetid://0') then
                     self:SetProperties(Tool.Handle:FindFirstChildOfClass('SpecialMesh'), {
                         MeshId = 'rbxassetid://0',
-                    }):andThen(function(
-                    )
+                    }):andThen(function()
                         for _, track in ipairs(Humanoid:GetPlayingAnimationTracks())do
                             track:Stop()
                         end
@@ -1786,8 +1459,7 @@ That Promise was created at:
                 if self._keepActive then
                     self._maid:GiveTask(Tool:GetPropertyChangedSignal('Parent'):Connect(function(
                     )
-                        task.defer(function(
-                        )
+                        task.defer(function()
                             if Tool.Parent == Backpack and Humanoid.Health > 0 then
                                 Tool.Parent = Character
                             end
@@ -1795,8 +1467,7 @@ That Promise was created at:
                     end))
                 end
 
-                self._maid:GiveTask(function(
-                )
+                self._maid:GiveTask(function()
                     Tool.Parent = Character
 
                     if Tool.Parent ~= nil then
@@ -1806,18 +1477,12 @@ That Promise was created at:
                     end
                 end)
             end
-            function Cloud:SetProperties(
-                object,
-                propertyTable
-            )
+            function Cloud:SetProperties(object, propertyTable)
                 local Character, _ = LocalPlayer.Character, LocalPlayer.Backpack
 
                 Character:FindFirstChildOfClass('Humanoid')
 
-                return Promise.new(function(
-                    res,
-                    rej
-                )
+                return Promise.new(function(res, rej)
                     if not object:IsDescendantOf(Character) then
                         rej('Object is not a descendant of the character')
                     end
@@ -1829,8 +1494,7 @@ That Promise was created at:
                     local bools = {}
 
                     for k, v in pairs(propertyTable)do
-                        task.defer(function(
-                        )
+                        task.defer(function()
                             bools[k] = false
 
                             self._control:InvokeServer('SetProperty', {
@@ -1875,40 +1539,31 @@ That Promise was created at:
                             break
                         end
                     end
-                end):catch(function(
-                    reason
-                )
+                end):catch(function(reason)
                     if reason ~= 'Timed out' then
                         error(reason)
                     end
                 end)
             end
-            function Cloud:EffectCloud(
-            )
-                return Promise.new(function(
-                    res,
-                    rej
-                )
+            function Cloud:EffectCloud()
+                return Promise.new(function(res, rej)
                     self._control:InvokeServer('Fly', {Flying = true})
 
                     local EffectCloud = self._tool:WaitForChild('EffectCloud')
 
-                    task.defer(res, EffectCloud, function(
-                    )
+                    task.defer(res, EffectCloud, function()
                         self._control:InvokeServer('Fly', {Flying = false})
                     end)
                 end)
             end
-            function Cloud:Destroy(
-            )
+            function Cloud:Destroy()
                 self._maid:Destroy()
             end
 
             return Cloud
         end
 
-        function _TAD_.e(
-        )
+        function _TAD_.e()
             local v = _TAD_.cache.e
 
             if not v then
@@ -1922,19 +1577,12 @@ That Promise was created at:
         end
     end
     do
-        local function __modImpl(
-        )
+        local function __modImpl()
             local Promise, Cloud, BAGH, Players = _TAD_.b(), _TAD_.e(), {}, game:FindService('Players')
             local LocalPlayer = Players.LocalPlayer
 
-            function BAGH:GetCloud(
-                forceNew,
-                keepActive
-            )
-                return Promise.new(function(
-                    res,
-                    rej
-                )
+            function BAGH:GetCloud(forceNew, keepActive)
+                return Promise.new(function(res, rej)
                     local Character, Backpack = LocalPlayer.Character, LocalPlayer.Backpack
 
                     if not forceNew and Backpack:FindFirstChild('Homebrew_Cloud') then
@@ -1948,9 +1596,7 @@ That Promise was created at:
                         return
                     end
 
-                    self:GetTool('PompousTheCloud'):andThen(function(
-                        tool
-                    )
+                    self:GetTool('PompousTheCloud'):andThen(function(tool)
                         local c = Cloud.new(tool, keepActive)
 
                         task.wait(1)
@@ -1958,19 +1604,13 @@ That Promise was created at:
                     end):catch(rej)
                 end)
             end
-            function BAGH:GetHead(
-            )
+            function BAGH:GetHead()
                 local Character, _ = LocalPlayer.Character, LocalPlayer.Backpack
 
-                return Promise.new(function(
-                    res,
-                    rej
-                )
+                return Promise.new(function(res, rej)
                     local con
 
-                    con = Character.ChildAdded:Connect(function(
-                        t
-                    )
+                    con = Character.ChildAdded:Connect(function(t)
                         if t:IsA('Model') then
                             con:Disconnect()
 
@@ -1989,26 +1629,18 @@ That Promise was created at:
                     end
                 end)
             end
-            function BAGH:GetTool(
-                Name
-            )
+            function BAGH:GetTool(Name)
                 local _, Backpack = LocalPlayer.Character, LocalPlayer.Backpack
 
-                return Promise.new(function(
-                    res,
-                    rej
-                )
+                return Promise.new(function(res, rej)
                     workspace.Buy:FireServer(0, Name)
 
                     local c
 
-                    c = Backpack.ChildAdded:Connect(function(
-                        child
-                    )
+                    c = Backpack.ChildAdded:Connect(function(child)
                         if child.Name == Name then
                             c:Disconnect()
-                            task.delay(0.2, function(
-                            )
+                            task.delay(0.2, function()
                                 res(child)
                             end)
                         end
@@ -2019,8 +1651,7 @@ That Promise was created at:
             return BAGH
         end
 
-        function _TAD_.f(
-        )
+        function _TAD_.f()
             local v = _TAD_.cache.f
 
             if not v then
@@ -2034,9 +1665,8 @@ That Promise was created at:
         end
     end
     do
-        local function __modImpl(
-        )
-            local _ = {
+        local function __modImpl()
+            return {
                 Part = {
                     'Shape',
                     'FormFactor',
@@ -2058,6 +1688,7 @@ That Promise was created at:
                     'TopSurface',
                     'Transparency',
                     'Name',
+                    'Velocity',
                 },
                 Decal = {
                     'Color3',
@@ -2091,12 +1722,9 @@ That Promise was created at:
                     'Name',
                 },
             }
-
-            return _
         end
 
-        function _TAD_.g(
-        )
+        function _TAD_.g()
             local v = _TAD_.cache.g
 
             if not v then
@@ -2110,8 +1738,7 @@ That Promise was created at:
         end
     end
     do
-        local function __modImpl(
-        )
+        local function __modImpl()
             local Promise = _TAD_.b()
 
             _TAD_.f()
@@ -2119,10 +1746,7 @@ That Promise was created at:
             local PropertyDict, Players = _TAD_.g(), game:FindService('Players')
             local LocalPlayer, ModelImporter = Players.LocalPlayer, {}
 
-            function buildPropertyDictionary(
-                i1,
-                i2
-            )
+            function buildPropertyDictionary(i1, i2)
                 local pDict = PropertyDict[i1.ClassName]
 
                 if pDict == nil then
@@ -2154,10 +1778,7 @@ That Promise was created at:
 
                 local useDefer, batchSize, batchSleep = options.useDefer or false, options.batchSize or 100, options.batchSleep or 0
 
-                return Promise.new(function(
-                    res,
-                    rej
-                )
+                return Promise.new(function(res, rej)
                     if not Model then
                         rej('Could not import model')
 
@@ -2204,8 +1825,7 @@ That Promise was created at:
                             end
 
                             local peePee = parts[count]
-                            local After = function(
-                            )
+                            local After = function()
                                 local ps = {}
 
                                 for _, v in ipairs(part:GetChildren())do
@@ -2246,10 +1866,7 @@ That Promise was created at:
 
                     local centre = Model:GetBoundingBox()
 
-                    table.sort(Assigns, function(
-                        a,
-                        b
-                    )
+                    table.sort(Assigns, function(a, b)
                         local A, B = a[1], b[1]
                         local distA, distB, sizeA, sizeB = (A.Position - centre.p).Magnitude, (B.Position - centre.p).Magnitude, A.Size.X * A.Size.Y * A.Size.Z, B.Size.X * B.Size.Y * B.Size.Z
 
@@ -2260,8 +1877,7 @@ That Promise was created at:
 
                     repeat
                         local _, p, prop, after = unpack(table.remove(Assigns))
-                        local r = Cloud:SetProperties(p, prop):andThen(function(
-                        )
+                        local r = Cloud:SetProperties(p, prop):andThen(function()
                             if after ~= nil and typeof(after) == 'function' then
                                 after():await()
                             end
@@ -2283,20 +1899,13 @@ That Promise was created at:
                         task.wait()
                     until #Promises == ctr
 
-                    Promise.all(Promises):andThen(function(
-                    )
+                    Promise.all(Promises):andThen(function()
                         res(Parent)
                     end, rej)
                 end)
             end
-            function ModelImporter:CloneProperties(
-                Instance1,
-                Instance2
-            )
-                return Promise.new(function(
-                    res,
-                    rej
-                )
+            function ModelImporter:CloneProperties(Instance1, Instance2)
+                return Promise.new(function(res, rej)
                     if Instance1.ClassName ~= Instance2.ClassName then
                         rej()
                     end
@@ -2319,20 +1928,9 @@ That Promise was created at:
                     end):catch(rej)
                 end)
             end
-            function ModelImporter:CreateParts(
-                Cloud,
-                Num
-            ) end
-            function ModelImporter:CreatePart(
-                P1,
-                Part,
-                Parent,
-                Flag
-            )
-                return Promise.new(function(
-                    res,
-                    rej
-                )
+            function ModelImporter:CreateParts(Cloud, Num) end
+            function ModelImporter:CreatePart(P1, Part, Parent, Flag)
+                return Promise.new(function(res, rej)
                     if (PropertyDict[Part.ClassName] == nil) then
                         rej(warn('Class not supported', Part.ClassName))
                     end
@@ -2352,8 +1950,7 @@ That Promise was created at:
             return ModelImporter
         end
 
-        function _TAD_.h(
-        )
+        function _TAD_.h()
             local v = _TAD_.cache.h
 
             if not v then
@@ -2367,20 +1964,14 @@ That Promise was created at:
         end
     end
     do
-        local function __modImpl(
-        )
+        local function __modImpl()
             local InstanceHeap = {}
 
             InstanceHeap.__index = InstanceHeap
 
             local Promise = _TAD_.b()
 
-            function InstanceHeap.new(
-                Cloud,
-                BaseInstance,
-                Model,
-                Name
-            )
+            function InstanceHeap.new(Cloud, BaseInstance, Model, Name)
                 local self = setmetatable({
                     _cloud = Cloud,
                     _heap = {},
@@ -2394,32 +1985,27 @@ That Promise was created at:
                     FulfillingRequest = false,
                 }
 
-                Cloud:SetProperties(BaseInstance, {Parent = Model})
                 Cloud:SetProperties(Model, {
                     Name = self.Name .. 'Heap',
                     Parent = Cloud._tool.Handle,
                 }):await()
+                Cloud:SetProperties(BaseInstance, {Parent = Model}):await()
+                print(Model, BaseInstance)
 
                 return self
             end
-            function InstanceHeap:SetDesiredAmount(
-                Amount
-            )
+            function InstanceHeap:SetDesiredAmount(Amount)
                 local Heap = self._heap
 
                 Heap.DesiredAmount = Amount
 
                 self:_updateAmount()
             end
-            function InstanceHeap:GetDesiredAmount(
-            )
+            function InstanceHeap:GetDesiredAmount()
                 return self._heap.DesiredAmount
             end
-            function InstanceHeap:_doubleIt(
-            )
-                return self._cloud:EffectCloud():andThen(function(
-                    e
-                )
+            function InstanceHeap:_doubleIt()
+                return self._cloud:EffectCloud():andThen(function(e)
                     local ps, is = {}, {}
 
                     for _, v in ipairs(e:WaitForChild(self._model.Name):GetChildren())do
@@ -2436,8 +2022,7 @@ That Promise was created at:
                     return is
                 end)
             end
-            function InstanceHeap:_updateAmount(
-            )
+            function InstanceHeap:_updateAmount()
                 local Heap = self._heap
 
                 if Heap.FulfillingRequest then
@@ -2466,14 +2051,8 @@ That Promise was created at:
 
                 print('Succesfully refilled heap for ' .. self.Name .. ' to ' .. #Instances)
             end
-            function InstanceHeap:RequestInstances(
-                Amount,
-                Refill
-            )
-                return Promise.new(function(
-                    res,
-                    rej
-                )
+            function InstanceHeap:RequestInstances(Amount, Refill)
+                return Promise.new(function(res, rej)
                     local Heap = self._heap
 
                     if Heap.FulfillingRequest then
@@ -2501,9 +2080,7 @@ That Promise was created at:
                     local onRefill
 
                     if Refill then
-                        onRefill = Promise.new(function(
-                            res
-                        )
+                        onRefill = Promise.new(function(res)
                             self:_updateAmount()
                             res()
                         end)
@@ -2512,9 +2089,7 @@ That Promise was created at:
                     res(Instances, onRefill)
                 end)
             end
-            function InstanceHeap:CanFulfill(
-                Amount
-            )
+            function InstanceHeap:CanFulfill(Amount)
                 local Heap = self._heap
 
                 if Heap.FulfillingRequest then
@@ -2525,16 +2100,14 @@ That Promise was created at:
 
                 return not (Amount > #Heap.Instances - 1)
             end
-            function InstanceHeap:Destroy(
-            )
+            function InstanceHeap:Destroy()
                 self._cloud:Destroy()
             end
 
             return InstanceHeap
         end
 
-        function _TAD_.i(
-        )
+        function _TAD_.i()
             local v = _TAD_.cache.i
 
             if not v then
@@ -2548,8 +2121,7 @@ That Promise was created at:
         end
     end
     do
-        local function __modImpl(
-        )
+        local function __modImpl()
             local Promise = _TAD_.b()
 
             _TAD_.i()
@@ -2558,9 +2130,7 @@ That Promise was created at:
 
             InstanceProvider.__index = InstanceProvider
 
-            function InstanceProvider.new(
-                Heaps
-            )
+            function InstanceProvider.new(Heaps)
                 local self = setmetatable({_heaps = {}}, InstanceProvider)
 
                 for k, Heap in pairs(Heaps)do
@@ -2575,20 +2145,11 @@ That Promise was created at:
 
                 return self
             end
-            function InstanceProvider:AddHeap(
-                Heap,
-                Name
-            )
+            function InstanceProvider:AddHeap(Heap, Name)
                 self._heaps[Name or Heap.Name] = Heap
             end
-            function InstanceProvider:RequestInstances(
-                Name,
-                Amount
-            )
-                return Promise.new(function(
-                    res,
-                    rej
-                )
+            function InstanceProvider:RequestInstances(Name, Amount)
+                return Promise.new(function(res, rej)
                     local Heap = self:GetHeap(Name)
 
                     if not Heap then
@@ -2605,26 +2166,21 @@ That Promise was created at:
                     Heap:RequestInstances(Amount, true):andThen(res, rej)
                 end)
             end
-            function InstanceProvider:RequestInstance(
-                Name
-            )
+            function InstanceProvider:RequestInstance(Name)
                 return self:RequestInstances(Name, 1):andThen(function(
                     Instances
                 )
                     return Instances[1]
                 end)
             end
-            function InstanceProvider:GetHeap(
-                Name
-            )
+            function InstanceProvider:GetHeap(Name)
                 return self._heaps[Name]
             end
 
             return InstanceProvider
         end
 
-        function _TAD_.j(
-        )
+        function _TAD_.j()
             local v = _TAD_.cache.j
 
             if not v then
@@ -2638,9 +2194,8 @@ That Promise was created at:
         end
     end
     do
-        local function __modImpl(
-        )
-            local BAGH, Cloud, ModelImporter, InstanceHeap, InstanceProvider, Maid, Promise, Properties = _TAD_.f(), _TAD_.e(), _TAD_.h(), _TAD_.i(), _TAD_.j(), _TAD_.d(), _TAD_.b(), _TAD_.g()
+        local function __modImpl()
+            local BAGH, Cloud, ModelImporter, InstanceHeap, InstanceProvider, Properties, Maid, Promise = _TAD_.f(), _TAD_.e(), _TAD_.h(), _TAD_.i(), _TAD_.j(), _TAD_.g(), _TAD_.d(), _TAD_.b()
 
             return setmetatable({
                 Cloud = Cloud,
@@ -2651,17 +2206,13 @@ That Promise was created at:
                 Promise = Promise,
                 Properties = Properties,
             }, {
-                __index = function(
-                    self,
-                    key
-                )
+                __index = function(self, key)
                     return BAGH[key]
                 end,
             })
         end
 
-        function _TAD_.k(
-        )
+        function _TAD_.k()
             local v = _TAD_.cache.k
 
             if not v then
@@ -2675,39 +2226,25 @@ That Promise was created at:
         end
     end
     do
-        local function __modImpl(
-        )
+        local function __modImpl()
             local BAGH, Promise, LocalPlayer = _TAD_.k(), _TAD_.b(), game.Players.LocalPlayer
 
-            local function clone(
-                instance,
-                parent
-            )
+            local function clone(instance, parent)
                 local originalParent = instance.Parent
 
-                return Promise.new(function(
-                    res,
-                    rej
-                )
-                    BAGH:GetCloud():andThen(function(
-                        cloud
-                    )
+                return Promise.new(function(res, rej)
+                    BAGH:GetCloud(false, false):andThen(function(cloud)
                         cloud:SetProperties(instance, {
                             Parent = cloud._tool.Handle,
-                        }):andThen(function(
-                        )
-                            cloud:EffectCloud():andThen(function(
-                                ec,
-                                d
-                            )
-                                local i = ec:FindFirstChild(instance.Name)
+                        }):andThen(function()
+                            cloud:EffectCloud():andThen(function(ec, d)
+                                local i = ec:WaitForChild(instance.Name)
 
                                 cloud:SetProperties(instance, {Parent = originalParent}):catch(rej)
                                 cloud:SetProperties(i, {
                                     Parent = parent or LocalPlayer.Character,
-                                }):andThen(function(
-                                )
-                                    d()
+                                }):andThen(function()
+                                    task.delay(1, d)
                                     res(i)
                                 end):catch(rej)
                             end):catch(rej)
@@ -2719,8 +2256,7 @@ That Promise was created at:
             return clone
         end
 
-        function _TAD_.l(
-        )
+        function _TAD_.l()
             local v = _TAD_.cache.l
 
             if not v then
@@ -2734,21 +2270,12 @@ That Promise was created at:
         end
     end
     do
-        local function __modImpl(
-        )
+        local function __modImpl()
             local BAGH, Promise = _TAD_.k(), _TAD_.b()
 
-            local function clearChildren(
-                instance,
-                parent
-            )
-                return Promise.new(function(
-                    res,
-                    rej
-                )
-                    BAGH:GetCloud():andThen(function(
-                        cloud
-                    )
+            local function clearChildren(instance, parent)
+                return Promise.new(function(res, rej)
+                    BAGH:GetCloud(false, false):andThen(function(cloud)
                         local ps = {}
 
                         for _, v in ipairs(instance:GetChildren())do
@@ -2765,8 +2292,7 @@ That Promise was created at:
             return clearChildren
         end
 
-        function _TAD_.m(
-        )
+        function _TAD_.m()
             local v = _TAD_.cache.m
 
             if not v then
@@ -2780,18 +2306,27 @@ That Promise was created at:
         end
     end
     do
-        local function __modImpl(
-        )
-            local clone, clearChildren = _TAD_.l(), _TAD_.m()
+        local function __modImpl()
+            local BAGH = _TAD_.k()
+            local _, InstanceHeap, _, _, Promise, clone, clearChildren = BAGH.ModelImporter, BAGH.InstanceHeap, BAGH.InstanceProvider, BAGH.Properties, _TAD_.b(), _TAD_.l(), _TAD_.m()
 
-            return {
-                clone = clone,
-                clearChildren = clearChildren,
-            }
+            local function createInstanceHeap(instance, model, props, name)
+                return Promise.new(function(res, rej)
+                    local _, Cloud = BAGH:GetCloud(false, false):catch(rej):await()
+                    local _, cl = clone(instance):catch(rej):await()
+
+                    print(cl)
+                    Cloud:SetProperties(cl, props):catch(rej)
+                    clearChildren(cl):andThen(function()
+                        res(InstanceHeap.new(Cloud, cl, model, name))
+                    end):catch(rej)
+                end)
+            end
+
+            return createInstanceHeap
         end
 
-        function _TAD_.n(
-        )
+        function _TAD_.n()
             local v = _TAD_.cache.n
 
             if not v then
@@ -2799,6 +2334,30 @@ That Promise was created at:
                     c = __modImpl(),
                 }
                 _TAD_.cache.n = v
+            end
+
+            return v.c
+        end
+    end
+    do
+        local function __modImpl()
+            local clone, clearChildren, createInstanceHeap = _TAD_.l(), _TAD_.m(), _TAD_.n()
+
+            return {
+                clone = clone,
+                clearChildren = clearChildren,
+                createInstanceHeap = createInstanceHeap,
+            }
+        end
+
+        function _TAD_.o()
+            local v = _TAD_.cache.o
+
+            if not v then
+                v = {
+                    c = __modImpl(),
+                }
+                _TAD_.cache.o = v
             end
 
             return v.c
@@ -2812,14 +2371,10 @@ local _, _, _, _, _ = BAGH.Cloud, BAGH.ModelImporter, BAGH.InstanceHeap, BAGH.In
 _TAD_.b()
 _TAD_.d()
 
-local util, _, model = _TAD_.n(), BAGH:GetHead():await()
-local _, cloud = BAGH:GetCloud():await()
+local util, model, cloud = _TAD_.o(), BAGH:GetHead():expect(), BAGH:GetCloud():expect()
 
 cloud:SetProperties(model, {
     Name = 'Model',
 })
-util.clearChildren(model):await()
-
-local _, m = util.clone(model):await()
-
-print(m, m.Parent, model.Parent)
+util.clearChildren(model):expect()
+util.clone(model):expect()

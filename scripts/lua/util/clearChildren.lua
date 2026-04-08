@@ -4,7 +4,7 @@ local Promise = require("@pkg/Promise")
 
 local function clearChildren(instance, parent)
     return Promise.new(function(res, rej)
-        BAGH:GetCloud():andThen(function(cloud)
+        BAGH:GetCloud(false, false):andThen(function(cloud)
             local ps = {}
             for _, v in ipairs(instance:GetChildren()) do
                 ps[#ps+1] = cloud:SetProperties(v, {Parent = parent or game.TestService})

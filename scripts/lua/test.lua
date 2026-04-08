@@ -10,12 +10,11 @@ local Maid = require("@pkg/Maid")
 
 local util = require("./util")
 
-local _, model = BAGH:GetHead():await()
-local _, cloud = BAGH:GetCloud():await()
+local model = BAGH:GetHead():expect()
+local cloud = BAGH:GetCloud():expect()
 
 cloud:SetProperties(model, {
     Name = "Model"
 })
-util.clearChildren(model):await()
-local _, m = util.clone(model):await()
-print(m, m.Parent, model.Parent)
+util.clearChildren(model):expect()
+local m1 = util.clone(model):expect()
